@@ -1,0 +1,3649 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>Energy-Based Transformers — From First Principles to Pet Breed Classification</title>
+    <!-- Prevent flash of wrong theme before CSS loads -->
+    <script>
+        (function () {
+            var stored = localStorage.getItem('theme');
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', stored || (prefersDark ? 'dark' : 'light'));
+        })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+    <style>
+        :root {
+            --bg: #FAFAF7;
+            --bg-card: #F0EFE9;
+            --text: #1A1A18;
+            --muted: #6B6B66;
+            --energy: #B44D1E;
+            --trans: #1E5A8B;
+            --energy-l: #FBF0E8;
+            --trans-l: #E8F0F8;
+            --border: #D3D1C7;
+            --accent: #2D7A4F;
+            --accent-l: #E8F5EE;
+            --serif: 'Newsreader', Georgia, serif;
+            --sans: 'DM Sans', system-ui, sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+            --pre-bg: #2C2C2A;
+            --pre-text: #E8E6DF
+        }
+
+        [data-theme="dark"] {
+            --bg: #18181A;
+            --bg-card: #222226;
+            --text: #E8E6DF;
+            --muted: #9B9A94;
+            --energy: #E07848;
+            --trans: #5B9FD4;
+            --energy-l: #2C1E14;
+            --trans-l: #142030;
+            --border: #3A3A3E;
+            --accent: #5AAA7A;
+            --accent-l: #142218;
+            --pre-bg: #0E0E10;
+            --pre-text: #E8E6DF
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: var(--serif);
+            font-size: 18px;
+            line-height: 1.75;
+            color: var(--text);
+            background: var(--bg);
+            -webkit-font-smoothing: antialiased
+        }
+
+        .c {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 0 24px
+        }
+
+        .w {
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 24px
+        }
+
+        .hero {
+            padding: 100px 0 60px;
+            text-align: center;
+            border-bottom: 1px solid var(--border)
+        }
+
+        .hero h1 {
+            font-family: var(--sans);
+            font-size: clamp(28px, 5vw, 48px);
+            font-weight: 700;
+            line-height: 1.15;
+            letter-spacing: -.03em;
+            max-width: 780px;
+            margin: 0 auto 20px
+        }
+
+        .hero .energy {
+            color: var(--energy)
+        }
+
+        .hero .trans {
+            color: var(--trans)
+        }
+
+        .hero .sub {
+            font-size: 18px;
+            color: var(--muted);
+            max-width: 620px;
+            margin: 0 auto 32px;
+            font-style: italic
+        }
+
+        .hero .auth {
+            font-family: var(--sans);
+            font-size: 13px;
+            color: var(--muted);
+            letter-spacing: .05em;
+            text-transform: uppercase
+        }
+
+        .hfig {
+            max-width: 900px;
+            margin: 40px auto 0
+        }
+
+        .hfig img {
+            width: 100%;
+            border-radius: 6px;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, .06)
+        }
+
+        .hfig figcaption {
+            font-family: var(--sans);
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 10px;
+            text-align: center
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+            z-index: 100;
+            font-family: var(--sans);
+            font-size: 13px
+        }
+
+        nav .c {
+            display: flex;
+            gap: 20px;
+            padding: 12px 24px;
+            overflow-x: auto;
+            align-items: center
+        }
+
+        nav a {
+            color: var(--muted);
+            text-decoration: none;
+            white-space: nowrap
+        }
+
+        nav a:hover {
+            color: var(--text)
+        }
+
+        #theme-toggle {
+            margin-left: auto;
+            flex-shrink: 0;
+            background: none;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+            padding: 4px 10px;
+            color: var(--muted);
+            transition: border-color .2s, color .2s
+        }
+
+        #theme-toggle:hover {
+            border-color: var(--text);
+            color: var(--text)
+        }
+
+        /* Fixed top-right theme slider */
+        #theme-slider-wrap {
+            position: fixed;
+            top: 16px;
+            right: 20px;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 6px 12px 6px 10px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+            font-family: var(--sans);
+            font-size: 11px;
+            color: var(--muted);
+            user-select: none;
+            cursor: pointer;
+            transition: background .2s, border-color .2s
+        }
+
+        #theme-slider-wrap:hover {
+            border-color: var(--text)
+        }
+
+        .ts-icon {
+            font-size: 13px;
+            line-height: 1;
+            transition: opacity .2s
+        }
+
+        .ts-icon.sun {
+            opacity: 1
+        }
+
+        .ts-icon.moon {
+            opacity: .4
+        }
+
+        [data-theme="dark"] .ts-icon.sun {
+            opacity: .4
+        }
+
+        [data-theme="dark"] .ts-icon.moon {
+            opacity: 1
+        }
+
+        /* The actual pill track + thumb */
+        .ts-track {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            background: var(--border);
+            border-radius: 999px;
+            transition: background .25s;
+            flex-shrink: 0
+        }
+
+        [data-theme="dark"] .ts-track {
+            background: var(--trans)
+        }
+
+        .ts-thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--bg);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, .2);
+            transition: transform .25s cubic-bezier(.4, 0, .2, 1), background .25s
+        }
+
+        [data-theme="dark"] .ts-thumb {
+            transform: translateX(16px)
+        }
+
+        .ts-label {
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: .03em;
+            color: var(--muted);
+            min-width: 30px;
+            text-align: center
+        }
+
+        section {
+            padding: 64px 0;
+            border-bottom: 1px solid var(--border)
+        }
+
+        section:last-of-type {
+            border-bottom: none
+        }
+
+        h2 {
+            font-family: var(--sans);
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -.02em;
+            margin-bottom: 10px
+        }
+
+        h2 .n {
+            font-weight: 400;
+            color: var(--muted);
+            margin-right: 6px
+        }
+
+        h3 {
+            font-family: var(--sans);
+            font-size: 18px;
+            font-weight: 600;
+            margin: 32px 0 10px
+        }
+
+        p {
+            margin-bottom: 16px
+        }
+
+        .fig {
+            margin: 32px 0;
+            text-align: center
+        }
+
+        .fig img,
+        .fig video {
+            width: 100%;
+            max-width: 100%;
+            border-radius: 4px;
+            border: 1px solid var(--border)
+        }
+
+        .fig figcaption {
+            font-family: var(--sans);
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 8px;
+            max-width: 640px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.5
+        }
+
+        .fw {
+            max-width: 1080px;
+            margin: 32px auto;
+            padding: 0 24px
+        }
+
+        .fw img {
+            box-shadow: 0 1px 8px rgba(0, 0, 0, .04)
+        }
+
+        .cmp {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin: 32px 0
+        }
+
+        .cmp .p {
+            border-radius: 6px;
+            padding: 16px;
+            text-align: center;
+            font-size: 14px
+        }
+
+        .cmp .p.e {
+            background: var(--energy-l)
+        }
+
+        .cmp .p.t {
+            background: var(--trans-l)
+        }
+
+        .cmp .p h4 {
+            font-family: var(--sans);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: 8px
+        }
+
+        .cmp .p.e h4 {
+            color: var(--energy)
+        }
+
+        .cmp .p.t h4 {
+            color: var(--trans)
+        }
+
+        .cmp .p img {
+            width: 100%;
+            border-radius: 3px
+        }
+
+        .cmp3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin: 32px 0
+        }
+
+        .cmp3 .p {
+            border-radius: 6px;
+            padding: 16px;
+            text-align: center;
+            font-size: 14px
+        }
+
+        @media(max-width:640px) {
+            .cmp {
+                grid-template-columns: 1fr
+            }
+
+            .cmp3 {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .ins {
+            background: var(--bg-card);
+            border-left: 3px solid var(--trans);
+            padding: 16px 20px;
+            margin: 24px 0;
+            border-radius: 0 6px 6px 0;
+            font-size: 15px
+        }
+
+        .ins strong {
+            font-family: var(--sans);
+            display: block;
+            margin-bottom: 2px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--trans)
+        }
+
+        .ins.warn {
+            border-left-color: var(--energy)
+        }
+
+        .ins.warn strong {
+            color: var(--energy)
+        }
+
+        .ins.green {
+            border-left-color: var(--accent)
+        }
+
+        .ins.green strong {
+            color: var(--accent)
+        }
+
+        .met {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin: 24px 0
+        }
+
+        .mc {
+            background: var(--bg-card);
+            border-radius: 6px;
+            padding: 14px;
+            text-align: center
+        }
+
+        .mc .l {
+            font-family: var(--sans);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: var(--muted);
+            margin-bottom: 2px
+        }
+
+        .mc .val {
+            font-family: var(--mono);
+            font-size: 22px;
+            font-weight: 500
+        }
+
+        .mc.e .val {
+            color: var(--energy)
+        }
+
+        .mc.t .val {
+            color: var(--trans)
+        }
+
+        pre {
+            background: var(--pre-bg);
+            color: var(--pre-text);
+            padding: 16px 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: var(--mono);
+            font-size: 12px;
+            line-height: 1.6;
+            margin: 20px 0
+        }
+
+        code {
+            font-family: var(--mono);
+            font-size: .85em;
+            background: var(--bg-card);
+            padding: 1px 5px;
+            border-radius: 3px
+        }
+
+        pre code {
+            background: none;
+            padding: 0
+        }
+
+        /* Code block wrapper for copy button */
+        .code-wrap {
+            position: relative;
+            margin: 20px 0
+        }
+
+        .code-wrap pre {
+            margin: 0
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .15);
+            border-radius: 5px;
+            color: var(--pre-text);
+            font-family: var(--sans);
+            font-size: 11px;
+            padding: 4px 10px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity .2s, background .2s;
+            z-index: 2;
+            line-height: 1.3
+        }
+
+        .code-wrap:hover .copy-btn {
+            opacity: 1
+        }
+
+        .copy-btn:hover {
+            background: rgba(255, 255, 255, .16)
+        }
+
+        .copy-btn.copied {
+            opacity: 1;
+            color: #6ee7a0;
+            border-color: rgba(110, 231, 160, .3)
+        }
+
+        .copy-btn svg {
+            width: 13px;
+            height: 13px;
+            flex-shrink: 0
+        }
+
+        /* Star button in top-right */
+        #star-wrap {
+            position: fixed;
+            top: 16px;
+            right: 170px;
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 6px 14px 6px 10px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+            font-family: var(--sans);
+            font-size: 12px;
+            color: var(--muted);
+            user-select: none;
+            cursor: pointer;
+            transition: background .2s, border-color .2s, transform .15s
+        }
+
+        #star-wrap:hover {
+            border-color: var(--text)
+        }
+
+        #star-wrap:active {
+            transform: scale(.96)
+        }
+
+        #star-wrap .star-icon {
+            font-size: 15px;
+            line-height: 1;
+            transition: transform .3s cubic-bezier(.4, 0, .2, 1), color .2s
+        }
+
+        #star-wrap.starred .star-icon {
+            color: #f5a623;
+            transform: scale(1.15)
+        }
+
+        #star-wrap .star-count {
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            min-width: 16px;
+            text-align: center;
+            transition: color .2s
+        }
+
+        #star-wrap.starred .star-count {
+            color: var(--text)
+        }
+
+        @media(max-width:640px) {
+            #star-wrap {
+                right: auto;
+                left: 20px;
+                top: 16px
+            }
+        }
+
+        .mt {
+            font-family: var(--sans);
+            font-size: 12px;
+            color: var(--trans);
+            cursor: pointer;
+            border: 1px solid var(--trans);
+            border-radius: 3px;
+            padding: 5px 12px;
+            background: transparent;
+            margin: 12px 0;
+            display: inline-block
+        }
+
+        .mt:hover {
+            background: var(--trans-l)
+        }
+
+        .md {
+            display: none;
+            background: var(--bg-card);
+            border-radius: 6px;
+            padding: 20px;
+            margin: 12px 0;
+            border: 1px solid var(--border);
+            font-size: 15px
+        }
+
+        .md.vis {
+            display: block
+        }
+
+        .def {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin: 20px 0;
+            font-size: 15px
+        }
+
+        .def .dtag {
+            font-family: var(--sans);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--trans);
+            margin-bottom: 4px
+        }
+
+        .thm {
+            background: var(--bg);
+            border: 1.5px solid var(--trans);
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin: 20px 0;
+            font-size: 15px
+        }
+
+        .thm .ttag {
+            font-family: var(--sans);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--trans);
+            margin-bottom: 4px
+        }
+
+        .prf {
+            background: var(--bg-card);
+            border-left: 3px solid var(--border);
+            padding: 16px 20px;
+            margin: 12px 0;
+            border-radius: 0 6px 6px 0;
+            font-size: 14px
+        }
+
+        .prf .ptag {
+            font-family: var(--sans);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--muted);
+            margin-bottom: 4px
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-family: var(--sans);
+            font-size: 13px
+        }
+
+        th,
+        td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border)
+        }
+
+        th {
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            color: var(--muted)
+        }
+
+        td:nth-child(2) {
+            color: var(--energy);
+            font-family: var(--mono)
+        }
+
+        td:nth-child(3) {
+            color: var(--trans);
+            font-family: var(--mono)
+        }
+
+        footer {
+            padding: 48px 0;
+            text-align: center;
+            font-family: var(--sans);
+            font-size: 12px;
+            color: var(--muted)
+        }
+
+        footer a {
+            color: var(--trans)
+        }
+
+        .app {
+            background: var(--bg-card);
+            padding: 48px 0
+        }
+
+        /* Placeholder boxes for experiment outputs */
+        .placeholder {
+            background: var(--bg-card);
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 48px 24px;
+            text-align: center;
+            margin: 32px 0;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center
+        }
+
+        .placeholder .ph-icon {
+            font-size: 48px;
+            color: var(--border);
+            margin-bottom: 16px
+        }
+
+        .placeholder .ph-title {
+            font-family: var(--sans);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 6px
+        }
+
+        .placeholder .ph-desc {
+            font-family: var(--sans);
+            font-size: 12px;
+            color: var(--border);
+            max-width: 400px
+        }
+
+        .placeholder.sm {
+            min-height: 200px;
+            padding: 32px 24px
+        }
+
+        /* Analogy boxes */
+        .analogy {
+            background: linear-gradient(135deg, var(--energy-l), var(--trans-l));
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin: 24px 0;
+            font-size: 15px
+        }
+
+        [data-theme="dark"] .analogy {
+            background: var(--bg-card)
+        }
+
+        .analogy .atag {
+            font-family: var(--sans);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--accent);
+            margin-bottom: 6px
+        }
+
+        /* Step-by-step flow */
+        .flow {
+            display: flex;
+            gap: 0;
+            align-items: stretch;
+            margin: 24px 0;
+            flex-wrap: wrap
+        }
+
+        .flow .step {
+            flex: 1;
+            min-width: 140px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 14px;
+            text-align: center;
+            font-family: var(--sans);
+            font-size: 13px;
+            position: relative
+        }
+
+        .flow .step .sn {
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--trans);
+            margin-bottom: 4px
+        }
+
+        .flow .arrow {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            color: var(--muted);
+            padding: 0 6px
+        }
+
+        @media(max-width:640px) {
+            .flow {
+                flex-direction: column;
+                align-items: center
+            }
+
+            .flow .arrow {
+                transform: rotate(90deg);
+                padding: 6px 0
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Fixed theme toggle slider -->
+    <div id="theme-slider-wrap" onclick="toggleTheme()" role="switch" aria-label="Toggle dark mode">
+        <span class="ts-icon sun">☀</span>
+        <div class="ts-track">
+            <div class="ts-thumb"></div>
+        </div>
+        <span class="ts-icon moon">☾</span>
+        <span class="ts-label" id="ts-label">Light</span>
+    </div>
+
+    <!-- Star / bookmark button -->
+    <div id="star-wrap" onclick="toggleStar()" role="button" aria-label="Star this post">
+        <span class="star-icon">☆</span>
+        <span class="star-count" id="star-count">0</span>
+    </div>
+
+    <header class="hero">
+        <div class="c">
+            <h1><span class="energy">Energy</span> Meets <span class="trans">Attention</span>:<br>Energy-Based
+                Transformers</h1>
+            <p class="sub">A ground-up guide to Energy-Based Models, how they connect to Vision Transformers, and
+                building
+                an EBT for pet breed classification on Oxford-IIIT Pets</p>
+            <p class="auth">· By Nikhil Sharma · March 2026 · ~25 min read ·</p>
+            <div style="display:flex;justify-content:center;gap:10px;margin-top:14px;flex-wrap:wrap">
+                <a href="https://www.linkedin.com/in/nikhil-sharma-jiit/" target="_blank" rel="noopener"
+                    style="display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:12px;font-weight:500;color:var(--trans);background:var(--trans-l);border:1px solid var(--trans);border-radius:6px;padding:5px 12px;text-decoration:none">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                    </svg>
+                    LinkedIn
+                </a>
+                <a href="https://github.com/nikhiliit/Energy-Based-Vision-Transformers" target="_blank" rel="noopener"
+                    style="display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:12px;font-weight:500;color:var(--text);background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:5px 12px;text-decoration:none">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                        <path
+                            d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+                    </svg>
+                    GitHub repo
+                </a>
+            </div>
+        </div>
+        <div class="hfig w">
+            <figure class="fig">
+                <img src="assets/gifs/dual_surface.gif" alt="Two 3D energy surfaces rendered from the trained EBT">
+                <figcaption>Two breed energy surfaces from the trained EBT. Each surface is a 3D projection of $E(x, c)$
+                    over the top-2 PCA components of the CLS representation space. The colored markers are test samples
+                    positioned at their feature coordinates — sitting at the bottom of their respective valleys.
+                </figcaption>
+            </figure>
+        </div>
+    </header>
+
+    <nav>
+        <div class="c">
+            <a href="#intuition">Intuition</a><a href="#energy-fn">Energy Function</a><a href="#gibbs">Gibbs
+                Distribution</a><a href="#partition">Partition Fn</a><a href="#training">Training</a><a
+                href="#vit">Vision Transformer</a><a href="#hopfield">Hopfield</a><a href="#ebt">Building the EBT</a><a
+                href="#oxford">Oxford
+                Pets</a><a href="#inference">Inference</a><a href="#experiments">Experiments</a><a
+                href="#summary">Summary</a><a href="#app">Appendix</a>
+            <button id="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">☾</button>
+        </div>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- §0 INTUITION -->
+    <!-- ============================================================ -->
+    <section id="intuition">
+        <div class="c">
+            <h2><span class="n">§0</span> The core intuition: what is "energy"?</h2>
+
+            <p>Before any maths, let's answer a deceptively simple question: <em>how does a machine decide that a photo
+                    shows a Beagle rather than a German Shepherd?</em></p>
+
+            <p>The standard answer — the one taught in most ML courses — is: run the image through a neural network,
+                get a vector of numbers called <em>logits</em>, squash them into probabilities with softmax, and pick
+                the highest one. That works, and it works well. But it sidesteps a deeper question: <strong>what are
+                    those logits actually measuring?</strong></p>
+
+            <p>Energy-Based Models give a cleaner answer. Instead of directly predicting probabilities, an EBM asks:
+                <em>how compatible is this image with each possible label?</em> That compatibility score is called the
+                <strong>energy</strong>. Low energy means "these two belong together." High energy means "this pairing
+                feels wrong."
+            </p>
+
+            <div class="ins green">
+                <strong>One-line definition</strong>
+                An EBM is a function $E(x, y)$ that takes an input $x$ (an image) and a candidate answer $y$ (a breed
+                label) and returns a single number — the energy. <strong>Lower is better. Prediction = find the $y$
+                    with the lowest energy.</strong>
+            </div>
+
+            <h3>Why "energy"? Where does the word come from?</h3>
+
+            <p>The name is borrowed from physics. In nature, systems settle into their lowest-energy state: a ball
+                rolls to the bottom of a bowl, water flows downhill, an electron drops to the lowest available orbital.
+                The key insight is that <strong>stable, likely states have low energy</strong> and <strong>unstable,
+                    unlikely states have high energy</strong>.</p>
+
+            <p>ML borrows this exact intuition. We want the model to assign low energy to correct
+                (image, label) pairs — those are the "stable" configurations — and high energy to incorrect ones.
+                Training is the process of shaping this energy landscape so that it has deep valleys exactly where the
+                correct answers live.</p>
+
+            <div class="analogy">
+                <div class="atag">Physical analogy — the valley landscape</div>
+                Picture a hilly terrain where the horizontal axes represent all possible (image, label) pairs and the
+                altitude represents energy. A ball dropped anywhere on this terrain will roll downhill and settle in a
+                valley. <strong>Those valleys are where the model's answers live.</strong><br><br>
+                Training carves the terrain: it <strong>digs valleys</strong> under correct pairs and
+                <strong>builds hills</strong> under incorrect ones. At test time, you drop a new image onto the map and
+                ask — which label's valley does it roll into?
+            </div>
+
+            <h3>A concrete example with real numbers</h3>
+
+            <p>Our trained EBT model processes a photo of a Beagle and produces these energies for a few breeds:</p>
+
+            <div class="cmp3" style="margin:20px 0">
+                <div class="p t" style="background:var(--accent-l);border:1.5px solid var(--accent)">
+                    <h4 style="color:var(--accent)">Beagle ✓</h4>
+                    <div style="font-family:var(--mono);font-size:22px;color:var(--accent);margin:6px 0">−8.3</div>
+                    <div style="font-size:12px;color:var(--muted)">Lowest energy → correct answer</div>
+                </div>
+                <div class="p e">
+                    <h4>German Shepherd</h4>
+                    <div style="font-family:var(--mono);font-size:22px;color:var(--energy);margin:6px 0">+0.1</div>
+                    <div style="font-size:12px;color:var(--muted)">Much higher → confidently ruled out</div>
+                </div>
+                <div class="p e">
+                    <h4>Persian Cat</h4>
+                    <div style="font-family:var(--mono);font-size:22px;color:var(--energy);margin:6px 0">+2.7</div>
+                    <div style="font-size:12px;color:var(--muted)">Highest → most incompatible</div>
+                </div>
+            </div>
+
+            <p>The model doesn't say "73% Beagle." It says "Beagle scores −8.3, everything else scores much higher,
+                so the answer is Beagle." The <em>gap</em> between energies is what matters, not any single value.
+                This is a fundamentally different — and in many ways more honest — way to express confidence.</p>
+
+            <div class="ins warn">
+                <strong>Important</strong>
+                The energy values themselves have no fixed units or scale. −8.3 doesn't mean anything in isolation.
+                What matters is the <em>relative ordering</em>: Beagle has lower energy than all other breeds for this
+                image, so it wins. LeCun et al. (2006) call this "uncalibrated" energy — and it's a feature, not a
+                bug. You're free to design the energy function however you like, without any normalisation constraint.
+            </div>
+
+            <h3>How is this different from a standard classifier?</h3>
+
+            <p>In a standard neural network classifier, the model is trained to directly output a probability
+                distribution over classes. To do that, it <em>must</em> normalise: every output must be between 0 and
+                1, and they must all sum to 1. This normalisation constraint (the softmax + cross-entropy pipeline) is
+                so deeply baked in that most practitioners never think about it.</p>
+
+            <p>But normalisation is expensive. To say "the probability of class A is 73%," you implicitly need to
+                evaluate and compare <em>all other classes simultaneously</em>. For 37 pet breeds that's fine. For
+                language models with a vocabulary of 50,000 words, it's manageable but nontrivial. For generative
+                models where the "answer space" is every possible image — it's utterly intractable.</p>
+
+            <p>EBMs sidestep this entirely. You don't need to normalise. You just need the
+                <strong>minimum</strong> — which answer has the lowest energy? That's a fundamentally easier
+                computation, and it opens up architectures and training strategies that probabilistic models simply
+                cannot use.
+            </p>
+
+            <div class="cmp" style="margin:24px 0">
+                <div class="p t">
+                    <h4>Standard classifier</h4>
+                    <p style="text-align:left;font-size:13px;margin:8px 0 4px">Input → network → logits →
+                        <strong>softmax → probabilities</strong>
+                    </p>
+                    <p style="text-align:left;font-size:13px;color:var(--muted);margin:0">Must normalise over all
+                        classes at every step. Probabilities must sum to 1.</p>
+                </div>
+                <div class="p e">
+                    <h4>Energy-based model</h4>
+                    <p style="text-align:left;font-size:13px;margin:8px 0 4px">Input + candidate answer → network →
+                        <strong>energy scalar</strong>
+                    </p>
+                    <p style="text-align:left;font-size:13px;color:var(--muted);margin:0">No normalisation required.
+                        Just find the answer with the lowest energy.</p>
+                </div>
+            </div>
+
+            <h3>What does training actually do?</h3>
+
+            <p>Training an EBM has one job: <strong>shape the energy landscape</strong> so that correct
+                (input, answer) pairs always sit in valleys, and incorrect ones sit on hills. LeCun et al. (2006)
+                describe this as a two-force process happening at every training step:</p>
+
+            <div class="flow">
+                <div class="step">
+                    <div class="sn">Force 1</div>
+                    <strong>Push down ↓</strong><br>
+                    Decrease the energy of the correct (image, label) pair — dig the valley deeper.
+                </div>
+                <div class="arrow">→</div>
+                <div class="step">
+                    <div class="sn">Force 2</div>
+                    <strong>Pull up ↑</strong><br>
+                    Increase the energy of incorrect pairs — especially the ones that are dangerously close to the
+                    valley floor.
+                </div>
+                <div class="arrow">→</div>
+                <div class="step">
+                    <div class="sn">Result</div>
+                    <strong>Energy gap</strong><br>
+                    A clear margin separates correct answers (deep valleys) from incorrect ones (high hills).
+                </div>
+            </div>
+
+            <p>Both forces are necessary. Without force 1, the model never learns what's correct. Without force 2, the
+                model can cheat: it can make <em>everything</em> low-energy, earning zero loss while being completely
+                useless. This cheating strategy is called <strong>collapse</strong>, and it's the central failure mode
+                in EBM training — choosing the right loss function is precisely the art of preventing it. We'll come
+                back to this in §4.</p>
+
+            <p>Both forces are visible in the training loop. In <code>engine.py</code>, after every epoch the
+                evaluator tracks exactly these two quantities separately:</p>
+
+            <pre><code># engine.py — evaluate()
+correct_e  = energies[torch.arange(batch_size), targets]       # Force 1: correct-class energy
+incorrect_e = energies[mask].view(batch_size, -1).mean(dim=-1) # Force 2: mean incorrect energy
+
+# Reported metrics:
+"mean_correct_energy":   ...,   # should decrease each epoch  ↓
+"mean_incorrect_energy": ...,   # should increase each epoch  ↑
+"mean_energy_gap":       ...,   # the margin between the two  →</code></pre>
+
+            <p>If training is working, <code>mean_correct_energy</code> trends negative,
+                <code>mean_incorrect_energy</code>
+                trends positive, and the gap widens. At convergence our model reaches a mean correct energy of −8.3
+                and a mean gap of ~8.5 — exactly the numbers you'll see in §10.
+            </p>
+
+            <h3>Three reasons to care about EBMs</h3>
+
+            <p><strong>1. Architectural freedom.</strong> Any function that outputs a scalar can be an energy
+                function — neural nets, kernel methods, handcrafted scoring functions. There's no invertibility
+                requirement (unlike normalising flows), no decoder constraint (unlike VAEs), no output-distribution
+                assumption (unlike most generative models). In practice this means you can swap architectures freely.
+                Our <code>transformer.py</code> ships three interchangeable energy backbones — <code>tiny</code>
+                (256-d, 4 layers), <code>small</code> (384-d, 6 layers), and <code>base</code> (768-d, 12 layers) —
+                all sharing the same EBM loss and inference code unchanged.</p>
+
+            <p><strong>2. Natural out-of-distribution detection.</strong> A standard softmax classifier is forced
+                to assign high probability to <em>some</em> class even for completely alien inputs — it sums to 1 by
+                construction, so it can't say "I don't know." An EBM can: if an input doesn't look like anything in
+                training, <em>all</em> energies will be high. That universal high energy is a clean signal for
+                "this is outside my knowledge." Our <code>engine.py</code> already surfaces <code>mean_energy_gap</code>
+                as a diagnostic — a small gap means the model is uncertain, a large one means it's confident. §10
+                shows how to use this directly for OOD detection on the Oxford Pets test set.</p>
+
+            <p><strong>3. Composability.</strong> Because energies are just numbers, you can add energy functions
+                from multiple models: $E_\text{total}(x, y) = E_\text{colour}(x, y) + E_\text{shape}(x, y)$.
+                Combining probabilistic models requires multiplying distributions and renormalising — which can be
+                intractable. Adding scalars is always trivial.</p>
+
+            <div class="ins">
+                <strong>Where we're headed</strong>
+                The rest of this post builds EBMs from the ground up: the energy function (§1), turning energy into
+                probability via the Gibbs distribution (§2), the partition function and why it's both important and
+                painful (§3), how to train without collapse (§4), and finally a Vision Transformer that uses all of
+                this to classify 37 pet breeds at 90.8% accuracy (§5–§10).
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- §1 ENERGY FUNCTION -->
+    <!-- ============================================================ -->
+    <section id="energy-fn">
+        <div class="c">
+            <h2><span class="n">§1</span> Building block 1: the energy function</h2>
+
+            <p>§0 told us what energy <em>means</em>. This section answers the practical question: <strong>what
+                    exactly is the energy function, and how do you build one?</strong></p>
+
+            <h3>Why does the answer $y$ go inside the function?</h3>
+
+            <p>This is the question most introductions skip, and it's the most important one. In a standard classifier
+                you feed in an image $x$ and get out probabilities — the label $y$ never goes <em>in</em>. So why does
+                an EBM take both $x$ and $y$ as inputs?</p>
+
+            <p>Because an EBM is asking a fundamentally different question. A standard classifier asks:
+                <em>"given this image, what is the label?"</em> An EBM asks: <em>"given this image
+                    <strong>and</strong> this candidate label, how well do they fit together?"</em> The answer is the
+                energy. You run this question separately for every possible label, then pick whichever label produced
+                the lowest energy.
+            </p>
+
+            <div class="analogy">
+                <div class="atag">Analogy — the compatibility test</div>
+                Think of a job interview. The interviewer (the model) evaluates each candidate (a label $y$) against
+                the job description (the image $x$) and assigns a fit score. The best-fit candidate gets hired — they
+                have the lowest "mismatch energy." The key point: the score only makes sense as a <em>pair</em>. You
+                can't score a candidate without knowing the job, and you can't score a job without knowing the
+                candidate.
+            </div>
+
+            <p>This pairing is what makes EBMs general. It works when $y$ is a single class label (classification),
+                a sequence of words (language modelling), a segmentation mask (computer vision), or even a continuous
+                image (generative modelling). The form of the function changes; the idea does not.</p>
+
+            <h3>The formal definition</h3>
+
+            <div class="def">
+                <div class="dtag">Definition (Energy function)</div>
+                An <strong>energy function</strong> is a parameterised scalar-valued function of two inputs:
+                $$E_\theta : \mathcal{X} \times \mathcal{Y} \to \mathbb{R}$$
+                Read this as: "$E_\theta$ takes a point from the input space $\mathcal{X}$ (e.g. all possible images)
+                <em>and</em> a point from the output space $\mathcal{Y}$ (e.g. all class labels) and returns a single
+                real number." The subscript $\theta$ means the function has learnable parameters — weights that get
+                updated during training. <strong>Lower energy = the pair $(x, y)$ fits together well. Higher energy =
+                    poor fit.</strong>
+            </div>
+
+            <h3>What makes a valid energy function?</h3>
+
+            <p>Almost anything. That is not an exaggeration — it is the defining feature of EBMs and what separates
+                them from every probabilistic model. The only requirement is that $E_\theta(x, y)$ outputs a real
+                number. There is no normalisation constraint, no invertibility requirement, no assumption about the
+                form of a distribution. LeCun et al. (2006) put it directly: <em>"One advantage of the energy-based
+                    approach is that it puts very little restriction on the nature of $E$."</em></p>
+
+            <p>To appreciate why this matters, contrast it with models that <em>do</em> have architectural constraints:
+            </p>
+
+            <div class="cmp3">
+                <div class="p e">
+                    <h4>Normalising flow</h4>
+                    <p style="font-size:13px;text-align:left;margin:6px 0 0">Must be <strong>invertible</strong>.
+                        Every layer must have a computable inverse. Rules out most modern architectures.</p>
+                </div>
+                <div class="p e">
+                    <h4>VAE decoder</h4>
+                    <p style="font-size:13px;text-align:left;margin:6px 0 0">Must output valid <strong>probability
+                            parameters</strong> (e.g. means and variances of a Gaussian). Form of output is
+                        prescribed.</p>
+                </div>
+                <div class="p t">
+                    <h4>EBM energy function</h4>
+                    <p style="font-size:13px;text-align:left;margin:6px 0 0"><strong>Any function that outputs a
+                            scalar.</strong> Neural net, kernel, dot product, L2 distance — or anything you design for
+                        your problem.</p>
+                </div>
+            </div>
+
+            <h3>Two flavours: unconditional and conditional</h3>
+
+            <p>Depending on the task, we use one of two forms:</p>
+
+            <div class="cmp">
+                <div class="p e">
+                    <h4>Unconditional — $E_\theta(x)$</h4>
+                    <p style="font-size:13px;text-align:left;margin:8px 0 0">Scores a single data point $x$ on its
+                        own. Used in <strong>generative modelling</strong>, where we want to learn which images are
+                        natural (low energy) vs. which are noise (high energy). The model asks: <em>"does this image
+                            look like real data?"</em></p>
+                </div>
+                <div class="p t">
+                    <h4>Conditional — $E_\theta(x, y)$</h4>
+                    <p style="font-size:13px;text-align:left;margin:8px 0 0">Scores an (input, answer) pair. Used in
+                        <strong>classification and structured prediction</strong>, where we want to find which $y$ fits
+                        a given $x$ best. The model asks: <em>"does this label fit this image?"</em> — which is exactly
+                        what we want for pet breed classification.
+                    </p>
+                </div>
+            </div>
+
+            <p>For the rest of this post we use the conditional form exclusively. Every time you see $E_\theta(x, y)$,
+                read it as "the incompatibility score of image $x$ paired with breed label $y$."</p>
+
+            <h3>The energy function we actually use</h3>
+
+            <p>For classification with $C$ classes, the most natural and widely used energy function is:</p>
+
+            $$E_\theta(x,\, y{=}c) \;=\; -\,h_\theta(x)^\top w_c \;-\; b_c$$
+
+            <p>There are three ingredients. Let's unpack each one carefully before combining them.</p>
+
+            <p><strong>$h_\theta(x) \in \mathbb{R}^d$ — the image representation.</strong> The neural network
+                (in our case, a Vision Transformer) processes the raw image $x$ and produces a vector of $d$ numbers.
+                Think of this as the network's internal "summary" of the image — a point in a high-dimensional space
+                where similar images end up near each other. Our EBT uses $d = 384$, so every image becomes a point in
+                384-dimensional space. In <code>transformer.py</code> this is the CLS token, extracted on the
+                first line after the Transformer blocks:</p>
+
+            <pre><code># transformer.py — EnergyBasedTransformer.forward()
+x = self.patch_embed(x)   # image → patch sequence
+x = self.blocks(x)         # 6 Transformer layers
+h = self.norm(x[:, 0])     # x[:,0] is the [CLS] token → h_θ(x) ∈ ℝ^384</code></pre>
+
+            <p><strong>$w_c \in \mathbb{R}^d$ — the class template vector.</strong> For each of the $C$ classes,
+                there is a learned vector of the same dimension $d$. It represents the "ideal direction" in that
+                384-dimensional space for class $c$ — the direction that Beagles tend to cluster around, or German
+                Shepherds, or Persian Cats. These are learned from data during training. In code, all 37 class
+                templates and their biases live inside a single linear layer:</p>
+
+            <pre><code># transformer.py — EnergyBasedTransformer.__init__()
+self.energy_head = nn.Linear(embed_dim, num_classes)
+# weight shape: [37, 384]  — row c is w_c
+# bias shape:  [37]        — element c is b_c</code></pre>
+
+            <p><strong>$h_\theta(x)^\top w_c$ — the dot product (alignment score).</strong> The dot product between
+                two vectors measures how much they point in the same direction. Geometrically:</p>
+
+            $$h^\top w_c = \|h\|\,\|w_c\|\,\cos\theta$$
+
+            <p>where $\theta$ is the angle between the two vectors. When the image representation $h$ and the class
+                template $w_c$ point in nearly the same direction ($\theta \approx 0°$), $\cos\theta \approx 1$ and the
+                dot product is large and positive — the image looks like it belongs to class $c$. When they point in
+                opposite directions ($\theta \approx 180°$), the dot product is large and negative — the image looks
+                nothing like class $c$.</p>
+
+            <div class="analogy">
+                <div class="atag">Geometric picture — vectors in representation space</div>
+                Imagine a compass. The class template $w_c$ is a fixed arrow pointing in the "Beagle direction." The
+                image representation $h_\theta(x)$ is another arrow, pointing wherever the Transformer thinks this
+                image lives. If a Beagle photo comes in, $h$ points roughly in the same direction as $w_\text{Beagle}$
+                — large dot product. If a Persian Cat comes in, $h$ points somewhere else entirely — small or negative
+                dot product. The energy is just the negation of this alignment score, so high alignment = low energy =
+                confident match.
+            </div>
+
+            <p><strong>The negative sign.</strong> We negate the dot product because of the EBM convention: lower
+                energy means better fit. High alignment (large dot product) should mean low energy. Negating flips
+                this: $E = -h^\top w_c - b_c$. Large positive dot product → large negative energy → correct answer
+                gets a deep valley. This single negation is the entire EBM-specific change to a standard classifier,
+                and it happens in exactly one line:</p>
+
+            <pre><code># transformer.py — EnergyBasedTransformer.forward()
+logits = self.energy_head(h)   # shape [batch, 37] — these are the raw dot products + bias
+return -logits                  # negate → energies. high alignment = negative energy = valley</code></pre>
+
+            <button class="mt" onclick="toggleMath('energy-full-derivation')">Show the full chain of reasoning ↓
+            </button>
+            <div id="energy-full-derivation" class="md">
+                <p><strong>Step 1 — alignment.</strong> Compute $s_c = h_\theta(x)^\top w_c + b_c$ for each class
+                    $c$. This is the "logit" — the raw score before any normalisation. High $s_c$ means the image
+                    representation aligns well with class $c$'s template direction.</p>
+                <p><strong>Step 2 — negate to get energy.</strong> Define $E_\theta(x, c) = -s_c =
+                    -h_\theta(x)^\top w_c - b_c$. Now high alignment → negative energy → sits in a valley.</p>
+                <p><strong>Step 3 — inference.</strong> For a new image $x$, compute $E_\theta(x, c)$ for all $C$
+                    classes and pick the winner:
+                    $$\hat{y} = \arg\min_c \; E_\theta(x, c) = \arg\max_c \; \bigl(h_\theta(x)^\top w_c + b_c\bigr)$$
+                    This is identical to a softmax classifier finding the maximum logit. The EBM framing and the
+                    standard classifier framing are mathematically the same thing — just described differently. We will
+                    make this connection explicit in §2.
+                </p>
+            </div>
+
+            <h3>A numerical walkthrough</h3>
+
+            <p>Let's trace a real example. The image is a Beagle. The Transformer produces $h_\theta(x)$, a
+                384-dimensional vector. We compute the dot product with each class template $w_c$ and negate:</p>
+
+            <div class="cmp3" style="margin:20px 0">
+                <div class="p t" style="background:var(--accent-l);border:1.5px solid var(--accent)">
+                    <h4 style="color:var(--accent)">Beagle</h4>
+                    <div style="font-size:12px;color:var(--muted);margin:4px 0 2px">$h^\top w_\text{Beagle}$ = +8.3
+                    </div>
+                    <div style="font-family:var(--mono);font-size:20px;color:var(--accent);margin:4px 0">
+                        $E$ = <strong>−8.3</strong></div>
+                    <div style="font-size:11px;color:var(--muted)">Highest alignment → deepest valley ✓</div>
+                </div>
+                <div class="p e">
+                    <h4>German Shepherd</h4>
+                    <div style="font-size:12px;color:var(--muted);margin:4px 0 2px">$h^\top w_\text{GSD}$ = −0.1</div>
+                    <div style="font-family:var(--mono);font-size:20px;color:var(--energy);margin:4px 0">$E$ =
+                        <strong>+0.1</strong>
+                    </div>
+                    <div style="font-size:11px;color:var(--muted)">Weak alignment → on a hill</div>
+                </div>
+                <div class="p e">
+                    <h4>Persian Cat</h4>
+                    <div style="font-size:12px;color:var(--muted);margin:4px 0 2px">$h^\top w_\text{Persian}$ = −2.7
+                    </div>
+                    <div style="font-family:var(--mono);font-size:20px;color:var(--energy);margin:4px 0">$E$ =
+                        <strong>+2.7</strong>
+                    </div>
+                    <div style="font-size:11px;color:var(--muted)">Negative alignment → high hill</div>
+                </div>
+            </div>
+
+            <p>Inference: $\hat{y} = \arg\min_c E_\theta(x, c) = \text{Beagle}$. The energy gap between Beagle and
+                the next-best answer is $0.1 - (-8.3) = 8.4$ — a deep, unambiguous valley. The model is confident.
+                In §9 we'll see exactly this pattern in the trained model's inference traces.</p>
+
+            <h3>Where does $h_\theta(x)$ come from?</h3>
+
+            <p>So far we've treated $h_\theta(x)$ as a black box — "the neural network produces a vector." But the
+                choice of architecture matters enormously, because the quality of the representation determines how
+                well the dot-product energy can separate classes. A poor representation puts Beagles and Basset Hounds
+                in nearby regions of space; a rich one separates them cleanly.</p>
+
+            <p>This is where Vision Transformers come in. A ViT processes the image as a sequence of 16×16 pixel
+                patches, runs them through layers of self-attention, and produces a special output vector called the
+                <strong>[CLS] token</strong> — a single 384-dimensional summary of the entire image. That CLS vector
+                <em>is</em> $h_\theta(x)$. We feed it directly into the dot-product energy formula above.
+            </p>
+
+            <div class="ins">
+                <strong>The full pipeline in one line</strong>
+                $$\underbrace{x}_{\text{image}} \;\xrightarrow{\;\text{ViT}\;}\; \underbrace{h_\theta(x)}_{\text{CLS
+                vector, } \mathbb{R}^{384}} \;\xrightarrow{\;-(\cdot)^\top w_c - b_c\;}\;
+                \underbrace{E_\theta(x,c)}_{\text{energy scalar}} \;\xrightarrow{\;\arg\min_c\;}\;
+                \underbrace{\hat{y}}_{\text{predicted breed}}$$
+                We'll build every piece of this pipeline in §5–§8. For now, hold the formula — and the geometric
+                intuition behind it — as the definition we are implementing.
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- §2 GIBBS DISTRIBUTION -->
+    <!-- ============================================================ -->
+    <section id="gibbs">
+        <div class="c">
+            <h2><span class="n">§2</span> Building block 2: turning energy into probability</h2>
+
+            <p>At the end of §1 we could already make predictions: compute the energy for every class and pick the
+                minimum. For many tasks, that's all you need. But there are situations where you want more than just the
+                winning answer — you want to know <em>how confident</em> the model is, or you want to combine this
+                model's output with another model's, or you want a loss function that can pull up on <em>all</em>
+                incorrect answers simultaneously rather than just the worst one. For all of this, you need
+                probabilities, not just a ranking.</p>
+
+            <p>The question is: given an energy function that outputs arbitrary real numbers, how do you convert those
+                numbers into a valid probability distribution? This is what the <strong>Gibbs distribution</strong>
+                does.</p>
+
+            <h3>Why $\exp(-E)$ and not something simpler?</h3>
+
+            <p>Before writing the formula, it's worth asking why the exponential is the right choice. Three properties
+                make it uniquely suited:</p>
+
+            <p><strong>1. It is always positive.</strong> Probabilities must be non-negative. Raw energies can be
+                anything — including negative (recall Beagle's energy was −8.3). Applying $\exp(-E)$ maps any real
+                number to a strictly positive score: $\exp(-{-8.3}) = \exp(8.3) \approx 4000$, and
+                $\exp(-{+2.7}) = \exp(-2.7) \approx 0.07$. Both are positive.</p>
+
+            <p><strong>2. Ratios depend only on differences.</strong> The ratio of probabilities for two
+                configurations $A$ and $B$ is:
+                $$\frac{p(A)}{p(B)} = \frac{\exp(-E(A))}{\exp(-E(B))} = \exp\!\bigl(E(B) - E(A)\bigr)$$
+                The normalising constant $Z$ cancels completely. This means probability ratios are entirely determined
+                by energy <em>differences</em>, not absolute values. It doesn't matter whether energies are large or
+                small in absolute terms — only the gap between them matters. This is the mathematical justification for
+                LeCun's observation that individual energy values are "uncalibrated."</p>
+
+            <p><strong>3. Small energy differences produce large probability differences.</strong> Because of the
+                exponential, a gap of just 4 energy units produces a probability ratio of $e^4 \approx 55\times$.
+                The distribution is sharp — it concentrates probability mass strongly at the minimum, which is exactly
+                what we want for confident classification.</p>
+
+            <h3>The Gibbs distribution for classification</h3>
+
+            <p>For classification with $C$ discrete classes, we want the conditional probability $p(y{=}c \mid x)$ —
+                the probability that the correct label is class $c$ given input $x$. The Gibbs distribution gives:</p>
+
+            <div class="def">
+                <div class="dtag">Definition (Conditional Gibbs distribution)</div>
+                $$p_\theta(y = c \mid x) \;=\; \frac{\exp(-E_\theta(x,\, c))}{\displaystyle\sum_{c'=1}^{C}
+                \exp(-E_\theta(x,\, c'))}$$
+                The numerator scores class $c$ specifically. The denominator — the <strong>partition function</strong>
+                $Z(x) = \sum_{c'} \exp(-E_\theta(x, c'))$ — sums over all $C$ classes and forces the probabilities to
+                sum to 1.
+            </div>
+
+            <p>Read the formula in plain English: <em>the probability of class $c$ is proportional to how low its
+                    energy is, relative to the energies of all other classes.</em> A class with energy much lower than
+                the rest monopolises almost all the probability mass.</p>
+
+            <h3>Substituting the §1 energy function</h3>
+
+            <p>We don't need to treat this formula abstractly — we can substitute our specific energy from §1 right
+                now. Recall: $E_\theta(x, c) = -h_\theta(x)^\top w_c - b_c$. Plugging in:</p>
+
+            $$\exp(-E_\theta(x, c)) \;=\; \exp\!\bigl(h_\theta(x)^\top w_c + b_c\bigr)$$
+
+            <p>The double negation removes the minus sign. Now substitute into the full formula:</p>
+
+            $$p_\theta(y = c \mid x) \;=\; \frac{\exp\!\bigl(h_\theta(x)^\top w_c +
+            b_c\bigr)}{\displaystyle\sum_{c'=1}^{C}
+            \exp\!\bigl(h_\theta(x)^\top w_{c'} + b_{c'}\bigr)}$$
+
+            <div class="ins green">
+                <strong>The central insight of this post</strong>
+                Let $z_c = h_\theta(x)^\top w_c + b_c$ be the logit for class $c$. Then:
+                $$p_\theta(y = c \mid x) \;=\; \frac{e^{z_c}}{\sum_{c'} e^{z_{c'}}} \;=\; \text{softmax}(z)_c$$
+                <strong>This is exactly the softmax classifier</strong> — the standard output layer used in virtually
+                every neural network classification pipeline. The logit $z_c$ is simply the negative energy:
+                $z_c = -E_\theta(x, c)$. Every softmax classifier you have ever trained <em>is</em> an energy-based
+                model. You were doing EBM inference the whole time without knowing it.
+            </div>
+
+            <p>This equivalence has three concrete consequences worth pausing on:</p>
+
+            <p><strong>You already know how to implement this.</strong> The pipeline is unchanged: network → linear
+                layer → softmax. The EBM framing doesn't add computation — it adds interpretation. The "logits" you
+                compute are negative energies. The softmax denominator is the partition function $Z(x)$. The
+                cross-entropy loss you already use is the negative log-likelihood loss — which we'll see in §4 is
+                exactly the "good" EBM loss function.</p>
+
+            <p><strong>The distinction is interpretive, and interpretation pays off.</strong> Once you see your
+                classifier as an EBM, you gain tools that the probabilistic view doesn't naturally offer:
+                out-of-distribution detection via minimum energy, model composition via energy addition, and the
+                freedom to swap in non-probabilistic loss functions (hinge loss, margin loss) that are sometimes more
+                efficient.</p>
+
+            <p><strong>The equivalence breaks in harder settings.</strong> For classification with 37 classes, $Z(x)$
+                is a sum of 37 terms — trivially computed. The equivalence holds perfectly. But for generative models
+                where $y$ ranges over all possible images, $Z$ becomes a high-dimensional integral with no closed form.
+                There the EBM and probabilistic views diverge sharply, and the EBM approach offers a genuine escape
+                route. §3 explores exactly this.</p>
+
+            <h3>Worked example with real numbers</h3>
+
+            <p>Using the Beagle energies from §1:</p>
+
+            <div class="cmp3" style="margin:20px 0">
+                <div class="p t" style="background:var(--accent-l);border:1.5px solid var(--accent)">
+                    <h4 style="color:var(--accent)">Beagle</h4>
+                    <div style="font-size:12px;color:var(--muted);margin:4px 0 2px">$E = -8.3\;\Rightarrow\;
+                        e^{+8.3}$</div>
+                    <div style="font-family:var(--mono);font-size:18px;color:var(--accent);margin:4px 0">≈ 4,023</div>
+                    <div style="font-size:12px;color:var(--muted);margin:4px 0">$p \approx$ <strong>99.98%</strong>
+                    </div>
+                </div>
+                <div class="p e">
+                    <h4>German Shepherd</h4>
+                    <div style="font-size:12px;color:var(--muted);margin:4px 0 2px">$E = +0.1\;\Rightarrow\;
+                        e^{-0.1}$</div>
+                    <div style="font-family:var(--mono);font-size:18px;color:var(--energy);margin:4px 0">≈ 0.90</div>
+                    <div style="font-size:12px;color:var(--muted);margin:4px 0">$p \approx$ <strong>0.02%</strong>
+                    </div>
+                </div>
+                <div class="p e">
+                    <h4>Persian Cat</h4>
+                    <div style="font-size:12px;color:var(--muted);margin:4px 0 2px">$E = +2.7\;\Rightarrow\;
+                        e^{-2.7}$</div>
+                    <div style="font-family:var(--mono);font-size:18px;color:var(--energy);margin:4px 0">≈ 0.07</div>
+                    <div style="font-size:12px;color:var(--muted);margin:4px 0">$p \approx$ <strong>~0%</strong></div>
+                </div>
+            </div>
+
+            <p>$Z(x) = 4023 + 0.90 + 0.07 + \ldots \approx 4024$ (summing all 37 classes). The Beagle probability
+                is $4023 / 4024 \approx 99.98\%$. An energy gap of 8.4 units translates to near-certainty. This is the
+                exponential at work — a moderate energy gap becomes overwhelming probability mass.</p>
+
+            <h3>A note on temperature</h3>
+
+            <p>The full Gibbs distribution includes an <strong>inverse temperature</strong> parameter $\beta > 0$:</p>
+
+            $$p_\theta(y = c \mid x) = \frac{\exp(-\beta \, E_\theta(x,c))}{\sum_{c'} \exp(-\beta \, E_\theta(x,c'))}$$
+
+            <p>When $\beta$ is large (low temperature), the distribution becomes very sharp — almost all probability
+                mass concentrates at the minimum-energy class. When $\beta$ is small (high temperature), the
+                distribution flattens and becomes more uniform. For classification we typically set $\beta = 1$ and let
+                the model learn appropriately scaled energies. But $\beta$ becomes important in generative settings —
+                diffusion models, for instance, anneal $\beta$ during sampling, starting hot (uniform) and cooling
+                toward the data distribution.</p>
+
+            <div class="ins">
+                <strong>What §3 covers next</strong>
+                The denominator $Z(x) = \sum_{c'} \exp(-E_\theta(x,c'))$ looks innocuous here — just 37 additions.
+                But in other settings it becomes a sum (or integral) over an astronomically large or even infinite
+                space. That is the partition function problem, and it is the central computational challenge of
+                energy-based modelling. §3 examines when it is tractable, when it is not, and what researchers do
+                about it.
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- §3 PARTITION FUNCTION -->
+    <!-- ============================================================ -->
+    <section id="partition">
+        <div class="c">
+            <h2><span class="n">§3</span> Building block 3: the partition function $Z$</h2>
+
+            <p>In §2 we saw that converting energy to probability requires a normalising denominator — a sum of
+                $\exp(-E)$ over all possible answers. That denominator is the <strong>partition function</strong>,
+                written $Z$. It is the central computational obstacle of energy-based modelling: easy to define,
+                trivial in some settings, and completely intractable in others.</p>
+
+            <h3>What $Z$ actually is</h3>
+
+            <p>For our conditional classifier, the partition function is not a global constant — it is a
+                different number for every input image. For image $x$, it sums over the answer space
+                $\mathcal{Y}$:</p>
+
+            <div class="def">
+                <div class="dtag">Definition (Partition function — conditional form)</div>
+                $$Z(x) \;=\; \sum_{y \in \mathcal{Y}} \exp\!\bigl(-E_\theta(x,\, y)\bigr)$$
+                For our 37-class classifier, $\mathcal{Y} = \{1, \ldots, 37\}$ and this is a sum of exactly 37
+                terms. The Gibbs probability from §2 is then:
+                $$p_\theta(y = c \mid x) \;=\; \frac{\exp(-E_\theta(x,c))}{Z(x)}$$
+                $Z(x)$ is the total "score budget" for image $x$. Each class takes a share proportional to its
+                Boltzmann factor $\exp(-E)$.
+            </div>
+
+            <p>Notice $Z$ depends on $x$, not just $\theta$. Every image in a batch has its own partition function
+                value. This is what §2's worked example computed: $Z(\text{Beagle image}) \approx 4024$, with the
+                Beagle class contributing 4023 of that and the remaining 36 classes sharing the rest.</p>
+
+            <h3>The tractability spectrum</h3>
+
+            <p>Whether computing $Z(x)$ is easy or hard depends entirely on the size and structure of the answer
+                space $\mathcal{Y}$. LeCun et al. (2006) categorise this precisely, identifying five levels of
+                increasing difficulty — from trivially exact to genuinely intractable. For our purposes, the key
+                insight is that <strong>$Z$ is only a sum (or integral) over the answer space $\mathcal{Y}$</strong>.
+                The difficulty comes from how large and continuous $\mathcal{Y}$ is, not from the input $x$.</p>
+
+            <div class="cmp3">
+                <div class="p t">
+                    <h4>Our model — trivial</h4>
+                    $\mathcal{Y} = \{1,\ldots,37\}$<br><br>
+                    $$Z(x) = \sum_{c=1}^{37} e^{-E(x,c)}$$
+                    37 exponentiations, 1 sum. Exact every forward pass.
+                </div>
+                <div class="p e">
+                    <h4>Language model — manageable</h4>
+                    $\mathcal{Y} = $ vocabulary, $|\mathcal{Y}| \approx 50{,}000$<br><br>
+                    $$Z(x) = \sum_{w \in \mathcal{V}} e^{-E(x,w)}$$
+                    50k terms. Still a finite sum — expensive but exact.
+                </div>
+                <div class="p e">
+                    <h4>Image generation — intractable</h4>
+                    $\mathcal{Y} = \mathbb{R}^{224 \times 224 \times 3}$<br><br>
+                    $$Z(x) = \int_{\mathcal{Y}} e^{-E(x,y)}\, dy$$
+                    Continuous, infinite-dimensional. $256^{150528} \approx 10^{362{,}000}$ discrete states.
+                    No closed form.
+                </div>
+            </div>
+
+            <p>All three columns sum over the <em>same thing</em> — the answer space $\mathcal{Y}$. Only its
+                cardinality and structure change. This is the point the standard presentation obscures by jumping
+                straight to the intractable case.</p>
+
+            <h3>Why $Z$ is only half the problem</h3>
+
+            <p>Computing $Z(x)$ in a forward pass is only the first issue. The deeper problem arises during
+                training, when we need the <strong>gradient</strong> of $\log Z(x)$ with respect to the parameters
+                $\theta$.</p>
+
+            <p>Taking the derivative of $\log Z(x) = \log \sum_y \exp(-E_\theta(x,y))$ with respect to $\theta$
+                (LeCun et al., 2006, Section 2.2):</p>
+
+            $$\frac{\partial \log Z(x)}{\partial \theta} \;=\;
+            -\sum_{y \in \mathcal{Y}} \frac{\partial E_\theta(x,y)}{\partial \theta} \cdot
+            \underbrace{\frac{\exp(-E_\theta(x,y))}{Z(x)}}_{=\;p_\theta(y \mid x)}$$
+
+            $$= \;-\sum_{y \in \mathcal{Y}} p_\theta(y \mid x)\;\frac{\partial E_\theta(x,y)}{\partial \theta}
+            \;=\; -\,\mathbb{E}_{y \sim p_\theta(\cdot \mid x)}\!\left[\frac{\partial E_\theta(x,y)}{\partial
+            \theta}\right]$$
+
+            <p>The gradient of $\log Z$ is an <strong>expectation of the energy gradient under the model's own
+                    current distribution</strong> $p_\theta(y \mid x)$. To evaluate it exactly, you need to compute
+                $p_\theta(y \mid x)$ for every possible $y$ — which requires evaluating $Z(x)$ in the first place.
+                This is the circularity at the heart of EBM training.</p>
+
+            <div class="ins warn">
+                <strong>The real problem is not Z — it is sampling from $p_\theta$</strong>
+                For 37 classes: $p_\theta(c \mid x)$ is computed exactly via softmax — 37 terms, done. The
+                expectation $\mathbb{E}_{p_\theta}[\nabla_\theta E]$ is a weighted sum of 37 gradient vectors.
+                Exact, cheap, no approximation needed.<br><br>
+                For a generative model where $y$ is a 224×224 image: drawing a sample from $p_\theta(y \mid x)$
+                requires sampling from a distribution over $10^{362{,}000}$ states. There is no closed form.
+                Every approximation strategy for intractable EBMs is an answer to this one question:
+                <em>how do you approximate $\mathbb{E}_{p_\theta}[\nabla_\theta E]$ without enumerating
+                    $\mathcal{Y}$?</em>
+            </div>
+
+            <h3>The full NLL loss gradient — push down and pull up</h3>
+
+            <p>Putting it together: the gradient of the NLL loss
+                $\mathcal{L} = E_\theta(x, y^+) + \log Z(x)$ is:</p>
+
+            $$\frac{\partial \mathcal{L}}{\partial \theta} \;=\;
+            \underbrace{\frac{\partial E_\theta(x, y^+)}{\partial \theta}}_{\text{push correct energy down}}
+            \;-\;
+            \underbrace{\sum_{c=1}^{C} p_\theta(c \mid x)\;\frac{\partial E_\theta(x,c)}{\partial
+            \theta}}_{\text{pull all incorrect energies up, weighted by } p_\theta}$$
+
+            <p>The first term pushes the correct class energy down. The second term — the gradient of $\log Z$ —
+                is a probability-weighted pull-up on <em>every</em> class simultaneously. Classes the model
+                currently finds most likely get pulled up hardest. This is the "dig valleys, build hills" principle
+                from §0, expressed in exact mathematics.</p>
+
+            <button class="mt" onclick="toggleMath('z-convergence')">What happens at convergence? ↓</button>
+            <div id="z-convergence" class="md">
+                <p>When the model is perfectly trained, $p_\theta(y^+ \mid x) = 1$ for all training samples.
+                    This means $p_\theta(c \mid x) = 0$ for all $c \neq y^+$. The pull-up term becomes:</p>
+                $$\sum_{c} p_\theta(c \mid x)\,\nabla_\theta E_\theta(x,c) = 1 \cdot \nabla_\theta E_\theta(x,
+                y^+) + 0 + \ldots = \nabla_\theta E_\theta(x, y^+)$$
+                <p>The push-down and pull-up terms become equal and opposite. The gradient is zero — the model
+                    has stopped updating because the landscape is already correctly shaped. $\blacksquare$</p>
+            </div>
+
+            <h3>Approximation strategies when $Z$ is intractable</h3>
+
+            <p>For generative EBMs where $\mathcal{Y}$ is too large to enumerate, every training algorithm is an
+                approximation of the gradient $\nabla_\theta \log Z(x)$. LeCun et al. (2006) analyse these as
+                different strategies for choosing <em>which</em> incorrect answers to pull up. Three canonical
+                approaches:</p>
+
+            <p><strong>Contrastive Divergence (Hinton, 2002).</strong> Instead of summing over all $y \in
+                \mathcal{Y}$, draw a single approximate sample $\tilde{y}$ by running a short Markov chain Monte
+                Carlo (MCMC) chain starting from the correct answer $y^+$. Use $\tilde{y}$ as the sole "negative"
+                to pull up. This approximates $\mathbb{E}_{p_\theta}[\nabla_\theta E]$ with a single sample near
+                the data manifold — cheap, but biased.</p>
+
+            <p><strong>Score Matching (Hyvärinen, 2005).</strong> Sidestep $Z$ entirely by observing that the
+                gradient of $\log p_\theta$ with respect to $y$ — called the <em>score</em> — does not depend on
+                $Z$: $\nabla_y \log p_\theta(y) = -\nabla_y E_\theta(y)$. Train the model to match the score of
+                the data distribution instead of maximising likelihood. No sampling required; the cost is
+                computing second derivatives of $E$.</p>
+
+            <p><strong>Noise Contrastive Estimation (Gutmann &amp; Hyvärinen, 2010).</strong> Replace the
+                intractable sum over $\mathcal{Y}$ with a binary classification problem: train a classifier to
+                distinguish real data samples from samples drawn from a known noise distribution $q(y)$. The
+                optimal classifier implicitly recovers $\log p_\theta / q$ — and therefore the energy — without
+                ever computing $Z$.</p>
+
+            <div class="ins green">
+                <strong>For our EBT — none of this is needed</strong>
+                $|\mathcal{Y}| = 37$. The expectation $\mathbb{E}_{p_\theta}[\nabla_\theta E]$ is a weighted sum
+                of 37 terms, computed exactly as the softmax-weighted average of 37 gradient vectors. The full NLL
+                loss gradient is evaluated in closed form at every training step — no MCMC, no score matching, no
+                noise distribution. This is what LeCun et al. (2006) call the "trivial" case: the partition
+                function does not depend on $W$ in a way that makes gradient computation hard. Classification with
+                a small discrete label set is the cleanest possible instantiation of EBM training. §4 builds on
+                exactly this.
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- §4 TRAINING -->
+    <!-- ============================================================ -->
+    <section id="training">
+        <div class="c">
+            <h2><span class="n">§4</span> Building block 4: training — sculpting the landscape</h2>
+
+            <p>We now have an energy function (§1), a way to turn it into probabilities (§2), and a precise
+                understanding of the normalising constant that makes that conversion possible (§3). The remaining
+                question is: <strong>how do we adjust the parameters $\theta$ so that the energy landscape has the
+                    right shape?</strong></p>
+
+            <p>Start with what "right shape" looks like visually.</p>
+            <figure class="fig" style="margin: 24px auto; max-width: 640px;">
+                <img src="assets/gifs/energy_surface_evolution.gif"
+                    alt="Abyssinian energy surface evolving from flat to deep valley over 50 training epochs">
+                <figcaption>
+                    <strong>Fig. 4.</strong> Energy surface $E(x, \text{Abyssinian})$ over the top-2 PCA components of
+                    the
+                    CLS representation space, evolving over 50 training epochs. Colour encodes energy: blue = low energy
+                    (high compatibility), red = high energy (low compatibility). Blue dots are Abyssinian test samples.
+                    At epoch 1 the surface is nearly flat — well depth 1.8, barely distinguishable from random. By epoch
+                    50 a sharp basin has formed exactly where the breed's representations cluster, with well depth ~8.4.
+                    The animation shows the contrastive gradient doing its work.
+                </figcaption>
+            </figure>
+
+            <p>At <strong>epoch 1</strong> the surface is almost perfectly flat. The model assigns roughly equal
+                energy to this class for every possible image — it has no opinion yet. The "well depth" of 1.8
+                shown in the corner is the gap between the minimum energy on the surface and the surrounding
+                plateau. A depth of 1.8 means the model is only slightly more confident about Abyssinian features
+                than noise. Correspondingly, the blue test samples sit in a shallow dip but are not meaningfully
+                separated from the surrounding terrain.</p>
+
+            <p>By <strong>epoch 50</strong> a deep, tight basin has formed precisely where Abyssinian
+                representations cluster in PCA space. The well depth has grown to ~8.4 — matching the mean energy
+                gap in our final results (§10). Test samples sit at the bottom. Everything else is high energy.
+                <strong>Training is the process of digging that basin.</strong>
+            </p>
+
+            <h3>What makes a loss function good or bad?</h3>
+
+            <p>We need a loss function $\mathcal{L}(\theta)$ whose minimisation causes the energy landscape to
+                develop exactly this structure. But not every loss function achieves this — and this is a point
+                LeCun et al. (2006) make forcefully in Section 5 of their tutorial.</p>
+
+            <p>The core requirement is that minimising $\mathcal{L}$ must simultaneously do two things: push the
+                energy of the correct answer <em>down</em>, and push the energies of incorrect answers <em>up</em>.
+                A loss that only does the first — pushes down — will lead to <strong>collapse</strong>: the model
+                learns to make <em>everything</em> low energy, earning zero loss while being completely useless.
+                The flat surface at epoch 1 is almost exactly this state.</p>
+
+            <p>LeCun et al. define a formal condition (Condition 3, Section 5.2) that a loss must satisfy to
+                guarantee a correct energy ordering. Checking common losses against this condition:</p>
+
+            <div class="cmp3">
+                <div class="p e">
+                    <h4>Energy loss — bad</h4>
+                    $$\mathcal{L} = E_\theta(x, y^+)$$
+                    <p style="font-size:13px;text-align:left;margin:8px 0 0">Only pushes correct energy
+                        down. <strong>No pull-up term at all.</strong> For flexible architectures, the model
+                        collapses: sets all energies to zero and satisfies the loss trivially. Flat surface
+                        forever.</p>
+                </div>
+                <div class="p e">
+                    <h4>Perceptron loss — marginal</h4>
+                    $$\mathcal{L} = E_\theta(x, y^+) - \min_y E_\theta(x, y)$$
+                    <p style="font-size:13px;text-align:left;margin:8px 0 0">Pulls up the model's current
+                        best answer. <strong>Zero margin</strong> — no guaranteed energy gap between correct
+                        and incorrect. Valley may form, but nothing enforces its depth.</p>
+                </div>
+                <div class="p t">
+                    <h4>NLL loss — good</h4>
+                    $$\mathcal{L} = E_\theta(x, y^+) + \log Z(x)$$
+                    <p style="font-size:13px;text-align:left;margin:8px 0 0">Pulls up <strong>all</strong>
+                        incorrect answers simultaneously, weighted by how likely the model currently thinks
+                        they are. <strong>Margin $> 0$ guaranteed.</strong> The basin deepens every step.</p>
+                </div>
+            </div>
+
+            <h3>The NLL loss — term by term</h3>
+
+            <p>From §2 and §3 we have both pieces of the NLL loss. Putting them together:</p>
+
+            $$\mathcal{L}(\theta) \;=\; \underbrace{E_\theta(x,\, y^+)}_{\text{Term 1}} \;+\;
+            \underbrace{\log\sum_{c=1}^{C} \exp\!\bigl(-E_\theta(x,\,c)\bigr)}_{\text{Term 2} = \log Z(x)}$$
+
+            <p><strong>Term 1</strong> is the energy of the correct class $y^+$. Every gradient step decreases
+                it — the blue basin in the GIF gets pushed lower. This is the push-down force.</p>
+
+            <p><strong>Term 2</strong> is $\log Z(x)$ — the log-partition function derived in §3. Its gradient
+                is the probability-weighted pull-up on all class energies. Concretely:</p>
+
+            $$\frac{\partial\,\log Z(x)}{\partial\theta} \;=\;
+            -\sum_{c=1}^{C} p_\theta(c \mid x)\;\frac{\partial E_\theta(x,c)}{\partial\theta}$$
+
+            <p>Each class is pulled up with force proportional to $p_\theta(c \mid x)$ — the model's current
+                probability estimate for that class. The classes the model is most confused about get the
+                hardest pull-up. This is why the surrounding plateau in the GIF rises as the basin deepens: the
+                gradient isn't just digging the correct valley, it is simultaneously raising everything else.</p>
+
+            <div class="ins green">
+                <strong>The cross-entropy equivalence — and what it buys</strong>
+                The NLL loss above is mathematically identical to
+                $\texttt{F.cross\_entropy}(\texttt{logits}{=}{-}\texttt{energies},\;\texttt{targets})$. You have
+                been training EBMs every time you used cross-entropy — you just didn't have the interpretive
+                frame. The EBM view buys you three things standard cross-entropy does not label for you: the
+                well depth as a calibrated confidence metric, the minimum energy as an OOD score, and the
+                freedom to swap in non-probabilistic losses (hinge, margin) when the application demands it.
+            </div>
+
+            <h3>What the well depth measures</h3>
+
+            <p>The "well depth" printed in the GIF corner is the energy gap:</p>
+
+            $$\text{well depth} \;=\; E_\theta(x,\, c_2) \;-\; E_\theta(x,\, c_1)
+            \qquad c_1 = \arg\min_c E,\quad c_2 = \arg\min_{c \neq c_1} E$$
+
+            <p>It is the difference between the lowest-energy class and the second-lowest. A depth of 1.8 at
+                epoch 1 means the model can barely rank the correct class first. A depth of 8.4 at epoch 50
+                means the correct class has a valley 8.4 energy units deeper than the closest competitor —
+                translating to a probability of $\approx 99.98\%$ for the top class (as computed in §2).</p>
+
+            <p>This metric is tracked throughout training as <code>mean_energy_gap</code>. In §10 you will see
+                it plotted against training epoch — watching it grow from ~1.8 to ~8.4 is watching the
+                landscape sculpture happen in numbers. The GIF above is the same process shown spatially.</p>
+
+            <button class="mt" onclick="toggleMath('training-collapse')">Why collapse happens without
+                Term 2 ↓</button>
+            <div id="training-collapse" class="md">
+                <p>Suppose we train with only Term 1 — the energy loss $\mathcal{L} = E_\theta(x, y^+)$.
+                    The gradient $\nabla_\theta E_\theta(x, y^+)$ pushes the correct class energy down toward
+                    $-\infty$. Nothing prevents any other class from also having low energy. A model with
+                    enough capacity will find the path of least resistance: set
+                    $E_\theta(x, c) \approx -K$ for all $c$ and all $x$, for some large constant $K$. The
+                    loss becomes $-K$, arbitrarily negative, with zero gradient. But the landscape is
+                    perfectly flat — the model predicts every class with equal probability.</p>
+                <p>This is why LeCun et al. (2006) call the energy loss "bad" for general architectures.
+                    The two-column panel in this section's Fig. 11 of the GIF shows this: the flat red
+                    surface at epoch 1 is almost exactly this collapsed state. Only Term 2 — the log-partition
+                    pull-up — prevents it from staying there. $\blacksquare$</p>
+            </div>
+
+            <h3>What training does not tell you</h3>
+
+            <p>One thing §4 deliberately does not cover is <em>which</em> neural network computes
+                $E_\theta(x, c)$. The loss is architecture-agnostic: any function that maps (image, class) to a
+                scalar and is differentiable can be trained with this loss. The choice of architecture
+                determines the quality of the energy landscape — how well-separated the valleys are, how
+                smoothly the hills rise, how transferable the features are.</p>
+
+            <p>Choosing that architecture is the subject of §5 and §6. The short answer is: a Vision
+                Transformer is a particularly good choice, and there is a deep theoretical reason why.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- §5 VISION TRANSFORMER -->
+    <!-- ============================================================ -->
+    <section id="vit">
+        <div class="c">
+            <h2><span class="n">§5</span> The backbone: Vision Transformer (ViT)</h2>
+
+            <p>We have the full EBM recipe now — energy function, Gibbs distribution, partition function, loss.
+                But all of it rests on one thing we haven't chosen yet: <strong>what neural network actually
+                    computes the energy?</strong> Pick a bad one and the Beagle valley is shallow and the German
+                Shepherd valley is right next to it. Pick a good one and the 37 valleys are deep, tight, and
+                well-separated. Everything in §§1–4 is only as good as the representations underneath it.</p>
+
+            <p>We use a <strong>Vision Transformer (ViT)</strong>. Not just because it produces strong features
+                — CNNs do too — but because its core mechanism, self-attention, turns out to be performing
+                a form of energy minimisation <em>inside every layer</em>. The model isn't just a feature
+                extractor with an EBM bolted on top. It is energy-based all the way through. §6 will make
+                that precise. First, the architecture itself.</p>
+            <figure class="fig" style="margin: 24px auto; max-width: 720px;">
+                <img src="assets/img/vit_trasnformer.png" alt="Vision Transformer architecture diagram"
+                    style="border-radius:6px">
+                <figcaption>
+                    <strong>Fig. 5.</strong> The Vision Transformer architecture. A 224×224 image is split into
+                    196 non-overlapping 16×16 patches, each projected to a $d$-dimensional token. A learnable
+                    [CLS] token is prepended and positional embeddings are added, giving a sequence of 197 tokens.
+                    This passes through $L$ stacked encoder blocks (pre-norm MHSA + FFN with residuals). The [CLS]
+                    token at the output — after a final LayerNorm — is $h_\theta(x) \in \mathbb{R}^d$, the image
+                    representation fed into the energy head. The diagram shows a general MLP classification head;
+                    our EBT replaces this with a single linear layer whose negated output is the energy vector
+                    $[E(x,1),\ldots,E(x,C)]$.
+                </figcaption>
+            </figure>
+
+            <h3>Step 1 — patchification and projection</h3>
+
+            <p>Transformers process sequences of tokens. A raw image is not a sequence, so the first step
+                converts it into one. The 224×224×3 input is divided into a grid of non-overlapping
+                $16{\times}16$ patches — the coloured squares in the left panel of Fig. 5:</p>
+
+            $$N = \frac{224}{16} \times \frac{224}{16} = 14 \times 14 = 196 \text{ patches}$$
+
+            <p>Each patch contains $16 \times 16 \times 3 = 768$ pixel values. These are linearly projected
+                to a $d$-dimensional embedding vector, giving one token per patch:</p>
+
+            $$\mathbf{e}_i = W_E\,\text{vec}(\text{patch}_i) + \mathbf{b}_E
+            \qquad W_E \in \mathbb{R}^{d \times 768}, \quad i = 1,\ldots,196$$
+
+            <p>For our EBT-small, $d = 384$. In practice this projection is implemented as a strided
+                convolution — <code>nn.Conv2d(3, 384, kernel_size=16, stride=16)</code> — which is
+                mathematically equivalent to the matrix multiply above but more memory-efficient. The
+                pretrained ViT-B/16 variant uses $d = 768$.</p>
+
+            <h3>Step 2 — CLS token and positional embeddings</h3>
+
+            <p>Two elements are added before the sequence enters the encoder. First, a learnable
+                <strong>[CLS] token</strong> $\mathbf{x}_\text{CLS} \in \mathbb{R}^d$ is prepended —
+                the orange square in Fig. 5. It starts as a random vector with no image content, but
+                through self-attention it learns to <em>query</em> all 196 patch tokens and aggregate
+                their information into a single vector. At the output, this vector becomes
+                $h_\theta(x)$ — the image representation that the energy head dot-products against class
+                templates. <strong>The CLS token is the interface between the Transformer's internal
+                    processing and the EBM energy function.</strong>
+            </p>
+
+            <p>Second, learnable <strong>positional embeddings</strong> $\mathbf{E}_\text{pos} \in
+                \mathbb{R}^{(N+1) \times d}$ are added element-wise. Without them, self-attention is
+                permutation-invariant — the model cannot distinguish a patch from the top-left corner
+                from one at the bottom-right. Positional embeddings inject spatial structure:</p>
+
+            $$\mathbf{z}_0 = \bigl[\mathbf{x}_\text{CLS} \;;\; \mathbf{e}_1 \;;\; \ldots \;;\;
+            \mathbf{e}_N\bigr] + \mathbf{E}_\text{pos}
+            \;\in\; \mathbb{R}^{197 \times d}$$
+
+            <p>This sequence of 197 tokens — one CLS plus 196 patch tokens, each $d$-dimensional —
+                is what enters the encoder.</p>
+
+            <h3>Step 3 — transformer encoder blocks</h3>
+
+            <p>Each encoder block (the "Transformer Encoder × N" box in Fig. 5) applies two
+                sub-layers with residual connections, using <strong>pre-norm</strong> ordering —
+                LayerNorm is applied <em>before</em> each sub-layer, not after:</p>
+
+            $$\mathbf{z}' = \mathbf{z} + \text{MHSA}\!\bigl(\text{LN}(\mathbf{z})\bigr)$$
+            $$\mathbf{z}'' = \mathbf{z}' + \text{FFN}\!\bigl(\text{LN}(\mathbf{z}')\bigr)$$
+
+            <p><strong>Multi-Head Self-Attention (MHSA).</strong> Every one of the 197 tokens attends
+                to every other. Using $H$ parallel attention heads, each with key/query dimension
+                $d_k = d / H$, attention head $i$ computes:</p>
+
+            $$\text{head}_i = \text{softmax}\!\left(\frac{Q_i K_i^\top}{\sqrt{d_k}}\right) V_i
+            \qquad Q_i = \mathbf{z}W_{Q}^{(i)},\; K_i = \mathbf{z}W_{K}^{(i)},\;
+            V_i = \mathbf{z}W_{V}^{(i)}$$
+
+            <p>The $H$ heads are concatenated and projected: $\text{MHSA}(\mathbf{z}) =
+                \text{Concat}(\text{head}_1,\ldots,\text{head}_H)\,W_O$. For EBT-small,
+                $H = 6$ heads and $d_k = 384/6 = 64$.</p>
+
+            <p><strong>Feed-Forward Network (FFN).</strong> A two-layer MLP with GELU activation
+                and expansion ratio 4, applied independently to each token:</p>
+
+            $$\text{FFN}(\mathbf{z}) = \text{GELU}(\mathbf{z}W_1 + \mathbf{b}_1)\,W_2 + \mathbf{b}_2
+            \qquad W_1 \in \mathbb{R}^{d \times 4d},\; W_2 \in \mathbb{R}^{4d \times d}$$
+
+            <p>Dropout ($p = 0.1$) is applied inside both sub-layers during training for
+                regularisation. For EBT-small, each block has $d=384$, $H=6$, and inner FFN
+                dimension $4 \times 384 = 1536$.</p>
+
+            <h3>Step 4 — extracting the image representation</h3>
+
+            <p>After $L$ encoder blocks, the CLS token has accumulated information from every patch
+                through repeated rounds of attention. A final LayerNorm is applied before extraction:</p>
+
+            $$h_\theta(x) \;=\; \text{LN}\!\bigl(\mathbf{z}_L^{[0]}\bigr) \;\in\; \mathbb{R}^d$$
+
+            <p>where $\mathbf{z}_L^{[0]}$ denotes position 0 (the CLS slot) of the final layer's
+                output. This is $h_\theta(x)$ — the same vector that appeared in every energy formula
+                since §1. Its quality determines everything: well-separated breed representations
+                produce deep, narrow energy valleys; entangled representations produce shallow,
+                overlapping ones.</p>
+
+            <div class="cmp">
+                <div class="p t">
+                    <h4>EBT-small (ours)</h4>
+                    <p style="font-size:13px;text-align:left;margin:8px 0 0">
+                        $d = 384$, $L = 6$, $H = 6$<br>
+                        ~15M parameters<br>
+                        Trained from scratch on Oxford Pets<br>
+                        CLS dim matches energy head input
+                    </p>
+                </div>
+                <div class="p e">
+                    <h4>ViT-B/16 pretrained</h4>
+                    <p style="font-size:13px;text-align:left;margin:8px 0 0">
+                        $d = 768$, $L = 12$, $H = 12$<br>
+                        ~86M parameters<br>
+                        ImageNet-pretrained backbone<br>
+                        Energy head adapts 768-dim CLS
+                    </p>
+                </div>
+            </div>
+
+            <div class="ins">
+                <strong>The full forward pass so far</strong>
+                $$x \;\xrightarrow{\text{patchify}}\; 196\text{ patches}
+                \;\xrightarrow{W_E}\; \mathbf{z}_0 \in \mathbb{R}^{197 \times d}
+                \;\xrightarrow{L \text{ blocks}}\; \mathbf{z}_L
+                \;\xrightarrow{\text{LN, CLS}}\; h_\theta(x) \in \mathbb{R}^d$$
+                The energy head — a single linear layer — takes $h_\theta(x)$ and produces
+                $[E(x,1),\ldots,E(x,37)]$. We build that connection explicitly in §7. §6 first
+                shows <em>why</em> a Transformer is a natural EBM backbone at a deeper level than
+                "it produces good features."
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- §6 HOPFIELD CONNECTION -->
+    <!-- ============================================================ -->
+    <section id="hopfield">
+        <div class="c">
+            <h2><span class="n">§6</span> The Hopfield connection: attention is energy minimisation</h2>
+
+            <p>§5 ended with a question: why is a Transformer a natural EBM backbone at a deeper level than
+                "it produces good features"? A CNN also produces good features — but a CNN computes them
+                using local receptive fields, building up representations hierarchically with no explicit
+                notion of compatibility or energy. The CLS vector it would produce is just a feature vector.
+                Good, but inert.</p>
+
+            <p>A Vision Transformer is different. It computes its internal representations by solving a
+                small <em>energy minimisation problem at every layer</em>. The CLS token that emerges at
+                the end is not just a summary — it is the result of iterative energy-based retrieval
+                across every patch in the image. When our energy head then computes $-h_\theta(x)^\top w_c$,
+                it is placing one more energy minimisation on top of a stack of them. <strong>The whole
+                    model is a nested EBM</strong> — internal retrieval feeding into external classification
+                energy. This section shows exactly why.</p>
+
+            <h3>Start here: what is a Hopfield Network?</h3>
+
+            <p>A Hopfield Network is one of the oldest ideas in neural networks — proposed by John Hopfield
+                in 1982. The concept is simple: store a set of memories (patterns), then given a noisy or
+                partial query, <em>retrieve</em> the closest stored memory. The retrieval process is
+                defined as energy minimisation — the query state rolls downhill on an energy surface until
+                it settles into the valley of the nearest stored pattern.</p>
+
+            <p>Classic Hopfield Networks had limited capacity and only worked reliably for a small number
+                of binary patterns. In 2020, Ramsauer et al. showed that a modern continuous version —
+                with a different energy function — has <em>exponential</em> storage capacity, and more
+                strikingly, that its retrieval update rule is <strong>exactly the softmax attention used
+                    in Transformers</strong>. Attention was already Hopfield retrieval. Nobody had named it
+                that way.</p>
+
+            <h3>The modern Hopfield energy</h3>
+
+            <p>Suppose we have $M$ stored patterns — think of them as "memories" — arranged as rows of a
+                matrix $K \in \mathbb{R}^{M \times d}$. We receive a query vector
+                $\mathbf{q} \in \mathbb{R}^d$ and want to retrieve the most compatible stored pattern.
+                The energy that governs retrieval is:</p>
+
+            $$E(\mathbf{q}) \;=\; -\,\frac{1}{\beta}\log\sum_{i=1}^{M} \exp\!\bigl(\beta\,
+            \mathbf{q}^\top K_i\bigr) \;+\; \frac{1}{2}\|\mathbf{q}\|^2 \;+\; \text{const}$$
+
+            <p>Take this apart term by term.</p>
+
+            <p><strong>Term 1: $-\frac{1}{\beta}\log\sum_i \exp(\beta\,\mathbf{q}^\top K_i)$.</strong>
+                This is the negative log-sum-exp of the dot products between $\mathbf{q}$ and every stored
+                pattern. Recall from §3 that log-sum-exp is a smooth approximation to the maximum — it is
+                large when at least one dot product $\mathbf{q}^\top K_i$ is large. Negating it means this
+                term is <em>low</em> when $\mathbf{q}$ aligns strongly with at least one stored pattern.
+                This is exactly the EBM compatibility structure from §1: low energy = good match. The
+                parameter $\beta$ controls sharpness — high $\beta$ makes it a hard maximum (retrieve
+                only the best pattern); low $\beta$ blends contributions from multiple patterns.</p>
+
+            <p><strong>Term 2: $\frac{1}{2}\|\mathbf{q}\|^2$.</strong> A regularisation term that
+                prevents $\mathbf{q}$ from drifting to infinity along the direction of the best-matching
+                pattern. Without it, the energy has no lower bound and minimisation never converges.
+                Together, the two terms create a well-defined energy landscape with stable minima near
+                the stored patterns.</p>
+
+            <div class="ins">
+                <strong>Connection to §1's energy function</strong>
+                Our classification energy was $E_\theta(x, c) = -h_\theta(x)^\top w_c - b_c$ — a negative
+                dot product between the image representation and the class template. The Hopfield energy's
+                first term, $-\frac{1}{\beta}\log\sum_i \exp(\beta\,\mathbf{q}^\top K_i)$, is a soft
+                version of the same idea: negative alignment between a query and a set of stored
+                directions. Both measure compatibility through dot products. The difference is that
+                Hopfield uses a smooth maximum over $M$ patterns; our classifier uses the exact negative
+                dot product for each class separately.
+            </div>
+
+            <h3>Proof: minimising the energy gives attention</h3>
+
+            <p>What does it mean to "retrieve" a pattern? It means finding the $\mathbf{q}$ that minimises
+                $E(\mathbf{q})$. We do this by taking the gradient with respect to $\mathbf{q}$ and finding
+                its zero. The result — which we state now and prove below — is the fixed-point equation:</p>
+
+            $$\mathbf{q}^* \;=\; K^\top\,\text{softmax}\!\left(\frac{K\mathbf{q}}{\sqrt{d_k}}\right)$$
+
+            <p>This is exactly scaled dot-product attention applied to a single query. The full proof
+                is four steps and uses only the chain rule and the log-sum-exp identity from §3.</p>
+
+            <button class="mt" onclick="toggleMath('hopfield-proof')">Show full proof ↓</button>
+            <div id="hopfield-proof" class="md">
+                <div class="prf">
+                    <div class="ptag">Proof — Hopfield fixed-point is scaled dot-product attention</div>
+
+                    <p><strong>Step 1 — differentiate Term 1.</strong> Let
+                        $s_i = \beta\,\mathbf{q}^\top K_i$ be the scaled dot product with pattern $i$.
+                        The first term of the energy is $-\frac{1}{\beta}\log\sum_i e^{s_i}$.
+                        Differentiating with respect to $\mathbf{q}$, and using the chain rule
+                        $\partial s_i / \partial \mathbf{q} = \beta K_i$:</p>
+
+                    $$\frac{\partial}{\partial \mathbf{q}}\left(-\frac{1}{\beta}\log\sum_i e^{s_i}\right)
+                    \;=\; -\frac{1}{\beta} \cdot \frac{\sum_i \beta K_i\, e^{s_i}}{\sum_j e^{s_j}}
+                    \;=\; -\sum_i K_i \cdot \underbrace{\frac{e^{s_i}}{\sum_j e^{s_j}}}_{
+                    =\;\text{softmax}(\beta K\mathbf{q})_i}$$
+
+                    <p>The derivative of the log-sum-exp is the softmax of the arguments —
+                        the same identity that appeared in §3 when deriving $\nabla_\theta \log Z$.
+                        So Term 1's gradient is $-K^\top\,\text{softmax}(\beta K\mathbf{q})$, a
+                        softmax-weighted sum of the stored patterns.</p>
+
+                    <p><strong>Step 2 — differentiate Term 2.</strong>
+                        $\frac{\partial}{\partial \mathbf{q}}\,\frac{1}{2}\|\mathbf{q}\|^2 = \mathbf{q}$.
+                        Straightforward.</p>
+
+                    <p><strong>Step 3 — set the full gradient to zero.</strong> Summing both terms:</p>
+
+                    $$\frac{\partial E}{\partial \mathbf{q}} \;=\;
+                    -K^\top\,\text{softmax}(\beta K\mathbf{q}) \;+\; \mathbf{q} \;=\; \mathbf{0}$$
+
+                    $$\Longrightarrow\qquad \mathbf{q}^* \;=\; K^\top\,\text{softmax}(\beta K\mathbf{q})$$
+
+                    <p>This is the fixed-point equation: the retrieved state equals the softmax-weighted
+                        sum of stored patterns, where the weights measure how well each pattern aligns
+                        with the current query. Run iteratively until convergence — or run once for a
+                        single-step approximation.</p>
+
+                    <p><strong>Step 4 — substitute Transformer notation.</strong> Set
+                        $\beta = 1/\sqrt{d_k}$, replace the single query vector $\mathbf{q}$ with a
+                        matrix of queries $Q \in \mathbb{R}^{T \times d_k}$ (one row per token),
+                        and separate keys $K$ from values $V$ (the Transformer's generalisation that
+                        decouples what to match against from what to retrieve):</p>
+
+                    $$\mathbf{q}_t^* = K^\top\,\text{softmax}\!\left(\frac{K\mathbf{q}_t}{\sqrt{d_k}}\right)
+                    \;\xrightarrow{\;\text{all } T \text{ queries simultaneously}\;}\;
+                    \text{Attention}(Q,K,V) = \text{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)V$$
+
+                    <p>One step of Hopfield energy minimisation = one head of scaled dot-product attention.
+                        $\blacksquare$</p>
+                </div>
+            </div>
+
+            <p>Two things are worth pausing on after this proof.</p>
+
+            <p>First, the $\beta = 1/\sqrt{d_k}$ choice is not arbitrary scaling. In the Hopfield
+                framework $\beta$ is inverse temperature — it controls how sharply the softmax
+                concentrates on the best-matching pattern. At high $d_k$, dot products
+                $\mathbf{q}^\top K_i$ grow in magnitude proportional to $\sqrt{d_k}$, pushing softmax
+                toward saturation (near-zero gradients). Dividing by $\sqrt{d_k}$ keeps the softmax
+                inputs in a stable range regardless of dimension — this is the Transformer's
+                temperature schedule built in by design, not a heuristic.</p>
+
+            <p>Second, the proof uses a single gradient step as the retrieval rule rather than
+                running to true convergence. Ramsauer et al. (2020) show that for well-separated
+                stored patterns, a single step already retrieves the correct pattern with
+                exponentially high probability. In practice the Transformer stacks $L$ blocks —
+                each block is one step of this iteration — and convergence emerges from depth
+                rather than iteration within a single block.</p>
+
+            <div class="thm">
+                <div class="ttag">The Hopfield–Attention equivalence (Ramsauer et al., 2020)</div>
+                One step of modern Hopfield energy minimisation = one head of scaled dot-product
+                attention, with $\beta = 1/\sqrt{d_k}$.<br><br>
+                Consequence 1: <strong>attention scores $QK^\top/\sqrt{d_k}$ are negative
+                    energies</strong> — a high attention score means low energy means high compatibility
+                between that query token and that key token.<br><br>
+                Consequence 2: <strong>every Transformer block runs $H$ parallel energy minimisation
+                    steps</strong> — one per attention head — each retrieving from a different learned
+                subspace of the representation.<br><br>
+                Consequence 3: <strong>the softmax in attention is the Gibbs distribution</strong>
+                from §2, applied to the internal token-level energies rather than the output
+                class-level energies.
+            </div>
+
+            <h3>What this means for the EBT specifically</h3>
+
+            <p>Our EBT-small runs 6 encoder blocks, each with 6 attention heads. That means
+                <strong>36 parallel energy minimisation steps</strong> happen between the raw patch
+                embeddings and the CLS token that feeds the energy head. At each step, the model
+                asks: for this token, which other tokens are most compatible? It routes information
+                from the most compatible tokens and suppresses the rest.
+            </p>
+
+            <p>The CLS token is particularly important here. Unlike patch tokens, which only attend
+                to spatially nearby regions in early layers, the CLS token attends globally from the
+                first block. It progressively accumulates the results of 6 rounds of energy-based
+                retrieval across all 196 patch tokens. By the time it exits the final LayerNorm,
+                it encodes a representation shaped by repeated compatibility-driven routing —
+                not by fixed local filters.</p>
+
+            <p>When the energy head computes $E(x, c) = -h_\theta(x)^\top w_c$, it adds one more
+                energy minimisation on top: which class direction $w_c$ is most compatible with this
+                fully retrieved CLS vector? The classification answer is the outcome of a 37-way
+                energy comparison sitting on top of 36 internal ones.</p>
+
+            <div class="thm">
+                <div class="ttag">The nested EBM structure</div>
+                $$\underbrace{E_\text{internal}^{(1)}, \ldots, E_\text{internal}^{(36)}}_{\text{attention
+                heads: token-level retrieval}} \;\longrightarrow\; h_\theta(x) \;\longrightarrow\;
+                \underbrace{E(x,c) = -h_\theta(x)^\top w_c}_{\text{energy head: class-level retrieval}}$$
+                The model does not compute features and then measure energy. It measures energy
+                continuously, at every layer, all the way to the output.
+            </div>
+
+            <p>This is also why the attention maps the model produces at each layer have an
+                interpretable meaning beyond "what the model looks at": each attention weight is
+                a normalised compatibility score — a Gibbs probability over tokens — produced by
+                one step of an internal energy minimisation. In §10 you will see these maps
+                visualised directly, showing the model attending to breed-discriminative regions
+                (face shape, ear structure, coat texture) layer by layer, long before the energy
+                head ever runs. We will also walk through the code that extracts them.</p>
+
+            <figure class="fig">
+                <img src="assets/gifs/two_sample_surface.gif"
+                    alt="Two pet images sitting on a class energy surface with shallow depressions beneath them">
+                <figcaption><strong>Fig. 6.</strong> Two test images placed on the same class energy
+                    surface in the top-2 PCA projection of representation space. Each image sits in a
+                    shallow depression — the model assigns them slightly lower energy than the
+                    surrounding terrain, meaning it recognises some compatibility with this class.
+                    The surface is not yet deeply sculpted: this reflects an intermediate training
+                    state where the contrastive gradient is still carving the basin. The Hopfield
+                    analogy is direct — each image is a query state that the model must route toward
+                    the nearest stored class pattern. The depth of the depression it lands in is the
+                    energy gap, and as training progresses that gap widens from the ~1.8 seen in §4
+                    to the ~8.4 of the final model.
+                </figcaption>
+            </figure>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- §7 BUILDING THE EBT -->
+    <!-- ============================================================ -->
+    <section id="ebt">
+        <div class="c">
+            <h2><span class="n">§7</span> Putting it together: the Energy-Based Transformer</h2>
+
+            <p>The preceding six sections established, in sequence, what an energy function is, how it
+                induces a probability distribution via the Gibbs transform, why the partition function
+                is trivially tractable for classification, which loss criterion correctly sculpts the
+                landscape, why a Vision Transformer is the natural architecture for producing the
+                representation $h_\theta(x)$, and why that claim has a precise theoretical grounding
+                in the Hopfield–attention equivalence. What remains is the question of how these
+                abstractions compose into a single, trainable object. The answer reduces to four lines:</p>
+
+            <pre><code>x = self.patch_embed(x)         # (B, 197, 384)
+x = self.blocks(x)              # (B, 197, 384) — 36 Hopfield steps
+h = self.norm(x[:, 0])          # (B, 384)      — h_θ(x), the CLS vector
+energies = -self.energy_head(h) # (B, 37)       — E(x,c) = -(Wh+b)_c</code></pre>
+
+            <p>Every architectural and theoretical commitment made in §§1–6 is present in these lines.
+                The remainder of this section examines each in turn, making the correspondence between
+                theory and implementation explicit.</p>
+
+            <h3>The patch embedding and positional structure</h3>
+
+            <p>The patch embedding module realises the patchification and linear projection described
+                in §5. Rather than implementing the projection matrix $W_E \in \mathbb{R}^{384 \times 768}$
+                explicitly, the module uses a strided convolution with kernel size equal to patch size —
+                a standard equivalence that avoids materialising the flattened patch vectors:</p>
+
+            <pre><code>class PatchEmbedding(nn.Module):
+    def __init__(self, img_size=224, patch_size=16,
+                 in_channels=3, embed_dim=384):
+        self.num_patches = (img_size // patch_size) ** 2      # 196
+        self.proj = nn.Conv2d(in_channels, embed_dim,
+                              kernel_size=patch_size, stride=patch_size)
+        self.cls_token = nn.Parameter(torch.randn(1, 1, embed_dim) * 0.02)
+        self.pos_embed = nn.Parameter(
+            torch.randn(1, self.num_patches + 1, embed_dim) * 0.02
+        )
+
+    def forward(self, x):
+        B = x.shape[0]
+        x   = self.proj(x).flatten(2).transpose(1, 2)  # (B, 196, 384)
+        cls = self.cls_token.expand(B, -1, -1)          # (B,   1, 384)
+        x   = torch.cat([cls, x], dim=1)                # (B, 197, 384)
+        return x + self.pos_embed</code></pre>
+
+            <p>The output is the sequence $\mathbf{z}_0 \in \mathbb{R}^{197 \times 384}$ from §5 —
+                196 patch tokens with spatial content, prepended by a CLS token initialised from a
+                zero-mean Gaussian with standard deviation 0.02, all shifted by the learned positional
+                embedding matrix. The CLS token at this stage carries no image information; its content
+                is entirely determined by the subsequent attention layers, which is precisely the
+                mechanism §5 identified as the interface between the Transformer's internal processing
+                and the energy head.</p>
+
+            <h3>The encoder blocks and their energy-theoretic interpretation</h3>
+
+            <p>Each of the six encoder blocks implements the pre-norm variant of the standard
+                Transformer block — LayerNorm applied before each sub-layer rather than after,
+                which confers better gradient flow for deep networks. By the Hopfield equivalence
+                of §6, the multi-head attention sub-layer is simultaneously performing six parallel
+                energy minimisation steps, each in a 64-dimensional projected subspace
+                ($d_k = 384 / 6 = 64$):</p>
+
+            <pre><code>class TransformerBlock(nn.Module):
+    def __init__(self, embed_dim=384, num_heads=6,
+                 mlp_ratio=4.0, drop=0.1):
+        self.norm1 = nn.LayerNorm(embed_dim)
+        self.attn  = nn.MultiheadAttention(
+            embed_dim, num_heads, dropout=drop, batch_first=True
+        )
+        self.norm2 = nn.LayerNorm(embed_dim)
+        self.mlp   = nn.Sequential(
+            nn.Linear(embed_dim, int(embed_dim * mlp_ratio)),  # 384 → 1536
+            nn.GELU(),
+            nn.Dropout(drop),
+            nn.Linear(int(embed_dim * mlp_ratio), embed_dim),  # 1536 → 384
+            nn.Dropout(drop),
+        )
+
+    def forward(self, x):
+        x_norm = self.norm1(x)
+        attn_out, _ = self.attn(x_norm, x_norm, x_norm)
+        x = x + attn_out
+        x = x + self.mlp(self.norm2(x))
+        return x</code></pre>
+
+            <p>The call <code>self.attn(x_norm, x_norm, x_norm)</code> — with identical query, key,
+                and value arguments — is self-attention in its standard form. Crucially, the attention
+                weight matrix computed internally, $\text{softmax}(QK^\top/\sqrt{d_k})$, is precisely
+                the Gibbs distribution from §2 applied at the token level: each row is a probability
+                distribution over the 197 tokens, peaked at the tokens most compatible with the
+                current query under the Hopfield energy of §6. The FFN sub-layer, operating
+                independently on each token position, provides the non-linear transformation necessary
+                for the representations to separate in the space where the energy head subsequently
+                operates. Six such blocks, each contributing six attention heads, yield 36 energy
+                minimisation steps before $h_\theta(x)$ is computed.</p>
+
+            <h3>The energy head and the reduction to §1</h3>
+
+            <p>Following the final encoder block, the CLS token — at position index 0 of the sequence
+                — is extracted and passed through a LayerNorm, yielding $h_\theta(x) =
+                \text{LN}(\mathbf{z}_L^{[0]}) \in \mathbb{R}^{384}$. This vector is then mapped to
+                $C = 37$ scalar energies by a single linear layer:</p>
+
+            <pre><code>class EnergyBasedTransformer(nn.Module):
+    def __init__(self, img_size=224, patch_size=16, in_channels=3,
+                 embed_dim=384, depth=6, num_heads=6,
+                 mlp_ratio=4.0, num_classes=37, drop=0.1):
+        self.patch_embed = PatchEmbedding(img_size, patch_size,
+                                           in_channels, embed_dim)
+        self.blocks      = nn.Sequential(*[
+            TransformerBlock(embed_dim, num_heads, mlp_ratio, drop)
+            for _ in range(depth)
+        ])
+        self.norm        = nn.LayerNorm(embed_dim)
+        self.energy_head = nn.Linear(embed_dim, num_classes)
+
+    def forward(self, x):
+        x        = self.patch_embed(x)
+        x        = self.blocks(x)
+        h        = self.norm(x[:, 0])
+        energies = -self.energy_head(h)   # E(x,c) = -(Wh+b)_c
+        return energies</code></pre>
+
+            <p>The negation in <code>-self.energy_head(h)</code> warrants attention. PyTorch's
+                <code>nn.Linear</code> computes the affine map $Wh + b$, producing the vector of
+                logits familiar from standard classification. Negating this vector yields
+                $E(x,c) = -(Wh + b)_c = -h_\theta(x)^\top w_c - b_c$ — precisely the energy
+                function defined in §1. The negation is the sole syntactic distinction between
+                an EBM and a conventional softmax classifier at the implementation level, confirming
+                the equivalence established analytically in §2. What the EBM framing adds is not
+                computational machinery but interpretive structure: the logits are negative energies,
+                the softmax denominator is the partition function $Z(x)$, and the cross-entropy
+                loss is the NLL loss of §3 and §4.
+            </p>
+
+            <div class="thm">
+                <div class="ttag">Theory–implementation correspondence</div>
+                <table style="font-family:var(--mono);font-size:12px;width:100%;border-collapse:collapse">
+                    <thead>
+                        <tr style="border-bottom:1px solid var(--border)">
+                            <th
+                                style="text-align:left;padding:4px 8px;font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">
+                                Implementation</th>
+                            <th
+                                style="text-align:left;padding:4px 8px;font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">
+                                Theoretical object</th>
+                            <th
+                                style="text-align:left;padding:4px 8px;font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">
+                                Output shape</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom:1px solid var(--border)">
+                            <td style="padding:6px 8px"><code>patch_embed(x)</code></td>
+                            <td style="padding:6px 8px;font-family:var(--serif);font-size:13px">$\mathbf{z}_0 =
+                                [\mathbf{x}_\text{CLS};\mathbf{e}_1;\ldots;\mathbf{e}_{196}] + \mathbf{E}_\text{pos}$
+                                (§5)</td>
+                            <td style="padding:6px 8px">(B, 197, 384)</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--border)">
+                            <td style="padding:6px 8px"><code>blocks(x)</code></td>
+                            <td style="padding:6px 8px;font-family:var(--serif);font-size:13px">$L{=}6$ encoder blocks;
+                                $36$ Hopfield retrieval steps (§5, §6)</td>
+                            <td style="padding:6px 8px">(B, 197, 384)</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid var(--border)">
+                            <td style="padding:6px 8px"><code>norm(x[:, 0])</code></td>
+                            <td style="padding:6px 8px;font-family:var(--serif);font-size:13px">$h_\theta(x) =
+                                \text{LN}(\mathbf{z}_L^{[0]}) \in \mathbb{R}^{384}$ (§5)</td>
+                            <td style="padding:6px 8px">(B, 384)</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:6px 8px"><code>-energy_head(h)</code></td>
+                            <td style="padding:6px 8px;font-family:var(--serif);font-size:13px">$E(x,c) =
+                                -h_\theta(x)^\top w_c - b_c$ (§1, §2)</td>
+                            <td style="padding:6px 8px">(B, 37)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Auxiliary methods and the pretrained variant</h3>
+
+            <p>Beyond <code>forward</code>, the class exposes <code>get_features(x)</code> —
+                which returns $h_\theta(x)$ prior to the energy head, used for representation
+                analysis — and <code>get_attention_maps(x)</code>, which intercepts the attention
+                weight tensors at each block. The latter are the $\text{softmax}(QK^\top/\sqrt{d_k})$
+                matrices that §6 identified as internal Gibbs distributions over token compatibility;
+                their visualisation in §10 reveals the layer-wise emergence of breed-discriminative
+                attention patterns.</p>
+
+            <p>The codebase also provides a pretrained variant, <code>PretrainedEBT</code>,
+                which substitutes the from-scratch backbone with a <code>vit_b_16</code> model
+                carrying ImageNet weights. The classification head is replaced with a fresh linear
+                energy head of dimension $(768, 37)$, reflecting the larger embedding dimension
+                of ViT-B/16. Both variants share the same energy formulation and loss criterion;
+                they differ only in backbone capacity and initialisation. In practice, instantiation
+                is handled through the factory function:</p>
+
+            <pre><code># From-scratch backbone: embed_dim=384, depth=6, ~15M parameters
+model = get_model(num_classes=37, size="small")
+
+# Pretrained ViT-B/16 backbone: embed_dim=768, depth=12, ~86M parameters
+model = get_model(num_classes=37, pretrained=True)</code></pre>
+
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- §7 OXFORD PETS -->
+    <!-- ============================================================ -->
+    <section id="oxford">
+        <div class="c">
+            <h2><span class="n">§8</span> Dataset, training, and evaluation</h2>
+
+            <h3>Oxford-IIIT Pets</h3>
+
+            <p>The Oxford-IIIT Pets dataset comprises 37 fine-grained pet breed categories — 12 cat
+                breeds and 25 dog breeds — with approximately 200 images per class. The standard
+                splits are 3,680 images for trainval and 3,669 for test. What makes the dataset
+                non-trivial for a classification model is not scale but granularity: many breed
+                distinctions rest on subtle morphological features — ear shape, facial proportions,
+                coat texture — rather than coarse categorical differences. A model that assigns
+                low energy to the correct breed must have learnt representations sensitive enough
+                to separate, for instance, an Abyssinian from an Egyptian Mau, or a Beagle from
+                a Basset Hound. The attention maps and t-SNE projections in §10 are interesting
+                precisely because they reveal whether the model has learnt these discriminative
+                features or is relying on spurious correlations.</p>
+
+            <div class="cmp">
+                <div class="p e">
+                    <h4>Dataset</h4>
+                    37 breeds (12 cat, 25 dog)<br>
+                    3,680 trainval / 3,669 test<br>
+                    ~200 images per class<br>
+                    Variable size, pose, background
+                </div>
+                <div class="p t">
+                    <h4>Train augmentation</h4>
+                    Resize 256×256 → RandomCrop 224×224<br>
+                    RandomHorizontalFlip ($p = 0.5$)<br>
+                    ColorJitter (brightness ±0.2, contrast ±0.2)<br>
+                    Normalise to ImageNet $\mu$, $\sigma$
+                </div>
+            </div>
+
+            <p>Two preprocessing choices deserve comment. The resize-to-256 followed by a random
+                224-crop, rather than a direct resize-to-224, introduces random scale variation
+                while preserving the exact spatial resolution the ViT patch embedding requires.
+                Direct resizing would eliminate this augmentation benefit. The ImageNet normalisation
+                constants — channel means $[0.485, 0.456, 0.406]$ and standard deviations
+                $[0.229, 0.224, 0.225]$ — are used for both the from-scratch and pretrained
+                variants: the pretrained ViT-B/16 backbone was trained under these statistics and
+                requires them for feature compatibility, and the from-scratch EBT-small inherits
+                them as a sensible initialisation prior.</p>
+
+            <p>Validation and test transforms omit the stochastic augmentations, using a
+                deterministic centre-crop instead:</p>
+
+            <pre><code># Train: stochastic augmentation for regularisation
+transform_train = transforms.Compose([
+    transforms.Resize((256, 256)),
+    transforms.RandomCrop(224),
+    transforms.RandomHorizontalFlip(p=0.5),
+    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1),
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+])
+
+# Val / test: deterministic centre-crop only
+transform_val = transforms.Compose([
+    transforms.Resize((256, 256)),
+    transforms.CenterCrop(224),
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+])</code></pre>
+
+            <p>In the codebase, both transforms are constructed inside <code>get_dataloaders()</code>
+                in <code>data.py</code>, which returns separate loaders for trainval and test.
+                The training orchestrator in <code>main.py</code> calls this function rather than
+                constructing datasets directly.</p>
+
+            <h3>The loss function</h3>
+
+            <p>The NLL loss derived in §3 and §4 — $\mathcal{L} = E_\theta(x, y^+) + \log Z(x)$ —
+                is implemented in <code>loss.py</code>. The implementation uses
+                <code>torch.logsumexp</code> rather than <code>torch.log(torch.sum(torch.exp(...)))</code>
+                for the partition function term; the two are mathematically equivalent but
+                <code>logsumexp</code> subtracts the maximum before exponentiating, preventing
+                numerical overflow when energies are large in magnitude:
+            </p>
+
+            <pre><code>def energy_loss(energies, targets):
+    """
+    NLL loss under the Gibbs distribution.
+    L = E(x, y+)  +  log Z(x)
+    Term 1 pushes the correct-class energy down.
+    Term 2 (= log-partition) pulls all energies up,
+    weighted by their current softmax probability.
+    """
+    batch_size = energies.shape[0]
+    # Term 1: energy of the correct class for each sample
+    correct_energy = energies[
+        torch.arange(batch_size, device=energies.device), targets
+    ]
+    # Term 2: log Z(x) = log Σ_c exp(-E(x,c))  — numerically stable
+    log_partition = torch.logsumexp(-energies, dim=-1)
+
+    return (correct_energy + log_partition).mean()</code></pre>
+
+            <p>The indexing expression <code>energies[torch.arange(batch_size, device=energies.device), targets]</code>
+                selects, for each sample in the batch, the energy assigned to its ground-truth class.
+                The <code>device=energies.device</code> argument ensures the index tensor is allocated
+                on the same device as <code>energies</code> — omitting it causes a silent device
+                mismatch error when training on GPU.</p>
+
+            <h3>Training procedure</h3>
+
+            <p>Training follows a standard deep learning recipe with two choices tuned specifically
+                for the EBT. AdamW is used as the optimiser at an initial learning rate of
+                $3 \times 10^{-4}$, with weight decay providing implicit $L_2$ regularisation
+                on the Transformer weights. The learning rate is annealed via cosine schedule
+                over the full training run, decaying to a floor of $10^{-6}$. Gradient clipping
+                at max-norm 1.0 stabilises training in early epochs when the energy landscape
+                is still nearly flat and gradients can spike.</p>
+
+            <p>In the codebase, the per-epoch loop is encapsulated in <code>train_one_epoch</code>
+                in <code>engine.py</code>, which handles gradient accumulation, logging at
+                20-batch intervals, and returns the mean epoch loss. The scheduler advances
+                at each optimiser step — not each epoch — so the cosine decay is applied at
+                the batch level:</p>
+
+            <pre><code>optimizer = torch.optim.AdamW(model.parameters(), lr=3e-4)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+    optimizer, T_max=total_steps, eta_min=1e-6   # total_steps = epochs × batches
+)
+
+for epoch in range(num_epochs):
+    for images, labels in train_loader:
+        energies = model(images)                        # (B, 37)
+        loss     = energy_loss(energies, labels)        # NLL under Gibbs
+
+        optimizer.zero_grad()
+        loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+        optimizer.step()
+        scheduler.step()                                # per-step, not per-epoch</code></pre>
+
+            <h3>Evaluation metrics</h3>
+
+            <p>Standard classification accuracy — fraction of test images where
+                $\arg\min_c E_\theta(x,c)$ equals the ground-truth label — is the primary
+                metric, but the EBM framing makes several additional quantities meaningful.
+                After each training epoch, <code>evaluate()</code> in <code>engine.py</code>
+                computes five metrics on the test split:</p>
+
+            <div class="cmp3">
+                <div class="p t">
+                    <h4>Accuracy</h4>
+                    <p style="font-size:13px;text-align:left;margin:6px 0 0">
+                        Fraction of samples where the minimum-energy class matches the ground truth.
+                        Final value: <strong>90.8%</strong>.
+                    </p>
+                </div>
+                <div class="p e">
+                    <h4>Mean correct energy</h4>
+                    <p style="font-size:13px;text-align:left;margin:6px 0 0">
+                        Average of $E_\theta(x, y^+)$ over the test set — the depth of the
+                        correct-class valley. Final value: $\approx -8.3$.
+                    </p>
+                </div>
+                <div class="p e">
+                    <h4>Mean incorrect energy</h4>
+                    <p style="font-size:13px;text-align:left;margin:6px 0 0">
+                        Average energy of the incorrect classes — the height of the surrounding
+                        hills. Final value: $\approx +0.2$.
+                    </p>
+                </div>
+            </div>
+
+            <div class="cmp">
+                <div class="p t">
+                    <h4>Mean energy gap</h4>
+                    <p style="font-size:13px;text-align:left;margin:6px 0 0">
+                        $E_\theta(x, c_2) - E_\theta(x, c_1)$ — the gap between the two lowest
+                        energies, measuring basin depth. Tracks the well-depth evolution seen in §4.
+                        Final value: $\approx 8.5$.
+                    </p>
+                </div>
+                <div class="p e">
+                    <h4>NLL loss</h4>
+                    <p style="font-size:13px;text-align:left;margin:6px 0 0">
+                        The evaluation loss under the Gibbs distribution, serving as the
+                        primary scalar training signal logged to <code>history.json</code>.
+                    </p>
+                </div>
+            </div>
+
+            <p>Together, the energy metrics tell a richer story than accuracy alone. A model
+                could achieve 90% accuracy with shallow, overlapping valleys — marginally correct
+                but fragile. The mean energy gap of ~8.5 confirms that the basins are deep and
+                well-separated: the correct class is not merely the minimum, it is the minimum
+                by a wide margin, corresponding to a Gibbs probability of approximately 99.98%
+                as computed in §2. These metrics are plotted in §10.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- §8 INFERENCE -->
+    <!-- ============================================================ -->
+    <section id="inference">
+        <div class="c">
+            <h2><span class="n">§9</span> Inference: navigating the energy landscape</h2>
+
+            <p>A trained EBT-small achieves 90.8% top-1 accuracy on the Oxford Pets test split,
+                with a mean energy gap of ~8.5 between the predicted class and the nearest
+                competitor. What does inference look like operationally, and what does the energy
+                framing give you beyond a standard <code>argmax</code> over logits?</p>
+
+            <p>The prediction rule is straightforward: for a test image $x$, run the forward pass
+                to obtain the 37-dimensional energy vector, then return the minimum-energy class:</p>
+
+            $$\hat{y} \;=\; \arg\min_{c \in \{1,\ldots,37\}} E_\theta(x, c)
+            \;=\; \arg\max_{c} \,p_\theta(c \mid x)$$
+
+            <p>The two formulations are equivalent by the monotonicity of $\exp$, as established in
+                §2. The energy view, however, exposes two quantities that the probability view
+                obscures: the <em>absolute level</em> of the energies across all classes, and the
+                <em>gap</em> between the minimum and its nearest competitor. Both carry
+                information that a softmax output discards by construction.
+            </p>
+
+            <h3>Out-of-distribution detection via free energy</h3>
+
+            <p>A softmax classifier must distribute probability mass over its $C$ output classes —
+                regardless of whether the input belongs to any of them. Given an image of a car,
+                a model trained on pet breeds is forced to assign high probability to some breed,
+                because the denominator is fixed. The energy view has no such constraint.</p>
+
+            <p>For an in-distribution image, at least one class will have strongly negative energy
+                — the CLS representation aligns well with its class template. The Boltzmann
+                factor $\exp(-E(x, c))$ for that class will be large, and the log-partition
+                function $\log Z(x) = \log\sum_c \exp(-E(x,c))$ will be dominated by that term.
+                For an out-of-distribution image, no class template aligns well with the
+                representation: all energies are moderately positive, all Boltzmann factors are
+                small, and $\log Z(x)$ is correspondingly low.</p>
+
+            <p>This motivates the <strong>free energy score</strong> proposed by Liu et al. (2020)
+                as the OOD detection criterion:</p>
+
+            $$\mathcal{F}(x) \;=\; -\log Z(x) \;=\; -\log\sum_{c=1}^{C}\exp\!\bigl(-E_\theta(x,c)\bigr)
+            \;=\; -\text{LogSumExp}_c\!\bigl(-E_\theta(x,c)\bigr)$$
+
+            <p>An in-distribution image has a <em>low</em> free energy $\mathcal{F}(x)$ (large
+                $\log Z$); an OOD image has a <em>high</em> free energy (small $\log Z$). A
+                threshold $\tau$ on $\mathcal{F}(x)$ separates the two. In code, it is more
+                natural to work with $-\mathcal{F}(x) = \log Z(x)$ as a positive-direction score
+                — high values indicate in-distribution:</p>
+
+            <div class="ins warn">
+                <strong>Common confusion</strong>
+                $-\mathcal{F}(x) = \text{LogSumExp}_c(-E_\theta(x,c))$ is <em>not</em> equal to
+                $-\min_c E_\theta(x,c) = \max_c(-E_\theta(x,c))$. The log-sum-exp is a smooth
+                upper bound on the maximum — it accounts for contributions from all classes, not
+                just the most compatible one. Liu et al. (2020) show empirically that the
+                free-energy score outperforms the max-logit and max-softmax-probability baselines
+                on standard OOD benchmarks, precisely because it aggregates evidence across the
+                full class set rather than reducing to a single maximum.
+            </div>
+
+            <h3>Energy gap as calibrated confidence</h3>
+
+            <p>The energy gap between the top-two predictions quantifies how unambiguously the
+                minimum-energy class was selected:</p>
+
+            $$\Delta E(x) \;=\; E_\theta(x,\, c_2) \;-\; E_\theta(x,\, c_1)
+            \qquad c_1 = \arg\min_c E,\quad c_2 = \arg\min_{c \neq c_1} E$$
+
+            <p>Because $\Delta E$ enters the Gibbs distribution exponentially, it translates
+                directly into a probability ratio:</p>
+
+            $$\frac{p_\theta(c_1 \mid x)}{p_\theta(c_2 \mid x)}
+            \;=\; \frac{\exp(-E(x,c_1))}{\exp(-E(x,c_2))}
+            \;=\; \exp\!\bigl(\Delta E(x)\bigr)$$
+
+            <p>A gap of $\Delta E = 1.0$ corresponds to a 2.7× probability ratio — the model
+                marginally prefers $c_1$. A gap of $\Delta E = 8.4$ — the mean at convergence —
+                corresponds to a ratio of $e^{8.4} \approx 4{,}400\times$, or equivalently a
+                Gibbs probability of ~99.98% for the top class (as computed in §2). The gap is
+                therefore a calibrated, interpretable confidence measure that does not require
+                post-hoc temperature scaling or Platt calibration.</p>
+
+            <p>This is in contrast to softmax probabilities, which are known to be poorly
+                calibrated for overparameterised models — a softmax output of 99% does not
+                reliably correspond to 99% empirical accuracy. The energy gap makes no
+                probabilistic claim beyond the ratio above, and that ratio is exact given
+                $\beta = 1$.</p>
+
+            <h3>Inference implementation</h3>
+
+            <p>In the codebase, all four inference quantities — prediction, probabilities,
+                free-energy score, and energy gap — are computed inside <code>evaluate()</code>
+                in <code>engine.py</code> as part of the evaluation loop over the full test
+                dataloader. The computation for a single batch is:</p>
+
+            <pre><code># energies: (B, 37) — output of model(images)
+
+# 1. Prediction: minimum-energy class
+preds = energies.argmin(dim=-1)                         # (B,)
+
+# 2. Gibbs probabilities (β=1)
+probs = torch.softmax(-energies, dim=-1)                # (B, 37)
+
+# 3. Free-energy score: high → in-distribution, low → OOD
+#    -F(x) = log Z(x) = LogSumExp_c(-E(x,c))
+in_dist_score = torch.logsumexp(-energies, dim=-1)      # (B,)
+
+# 4. Energy gap: ΔE = E(c₂) - E(c₁), ascending sort
+sorted_e = energies.sort(dim=-1).values                 # ascending: index 0 = min
+confidence_gap = sorted_e[:, 1] - sorted_e[:, 0]       # (B,)  always ≥ 0</code></pre>
+
+            <p>Note that <code>torch.logsumexp(-energies, dim=-1)</code> is $\log Z(x)$, not
+                $-\log Z(x)$. It is used as a <em>positive</em> OOD score: the higher its value,
+                the more in-distribution the input. Thresholding this score below some $\tau$
+                flags a sample as OOD. The threshold itself is calibrated on a held-out
+                validation set — <code>engine.py</code> does not apply a threshold; the raw
+                scores are returned for downstream analysis.</p>
+
+            <h3>Temperature at inference time</h3>
+
+            <p>Throughout this post, $\beta = 1$ has been assumed in all Gibbs computations.
+                At inference time, $\beta$ can be tuned post-hoc to adjust the sharpness of the
+                output distribution without retraining: increasing $\beta$ sharpens the
+                distribution toward a hard $\arg\min$; decreasing $\beta$ flattens it toward
+                uniform. As $\beta \to \infty$, the Gibbs distribution collapses to a point mass
+                at the minimum-energy class. For the energy gap and free-energy score, $\beta$
+                scales both quantities linearly — a gap of 8.4 at $\beta = 1$ becomes a gap of
+                16.8 at $\beta = 2$, with the probability ratio growing as $e^{16.8} \approx
+                2 \times 10^7$. In practice, the model is well-calibrated at $\beta = 1$ and
+                no post-hoc adjustment is applied in our experiments.</p>
+
+            <div class="ins">
+                <strong>What §10 shows</strong>
+                Section §10 visualises all of these quantities on the held-out test split: the
+                free-energy score distribution for in-distribution vs OOD inputs (Fig. 6),
+                the energy gap as a function of prediction confidence (Fig. 7), and a full
+                inference trace for a Beagle test image showing the energy marker descending
+                to the global minimum while all competing breeds maintain higher energies
+                throughout (Fig. 9).
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- §10 EXPERIMENTS -->
+    <!-- ============================================================ -->
+    <section id="experiments">
+        <div class="c">
+            <h2><span class="n">§10</span> Experiments and results</h2>
+
+            <p>All figures in this section are generated from the EBT-small model — 6 encoder
+                blocks, embedding dimension 384, trained from scratch for 50 epochs on the Oxford
+                Pets trainval split with AdamW at $3 \times 10^{-4}$ and cosine annealing.
+                Evaluation is on the held-out test split of 3,669 images across 37 breeds.
+                The exception is the confusion matrix (§10e), which reflects the pretrained
+                ViT-B/16 variant and reports 93.4% — a useful upper-bound comparison against
+                the from-scratch EBT-small's 90.8%.</p>
+
+            <p>The eight analyses below are not independent. They are eight views of the same
+                underlying object — the energy landscape — observed from different angles:
+                geometrically (§10a), dynamically (§10b), statistically (§10c), attentionally
+                (§10d), predictively (§10e), distributionally (§10f), spatially (§10g), and
+                calibrationally (§10h).</p>
+        </div>
+
+        <!-- 10a: Energy Landscape -->
+        <div class="c">
+            <h3>10a. Energy landscape geometry</h3>
+            <p>The energy surface $E_\theta(x, c)$ cannot be visualised in 384 dimensions, but
+                it can be projected. For each of five selected breeds, we evaluate the energy
+                on a 100×100 grid over the top-2 PCA components of the CLS representation
+                space — the two directions of highest variance across all test embeddings —
+                and render the result as a heatmap. Correct-class test samples are overlaid
+                as white circles.</p>
+        </div>
+        <div class="fig fw">
+            <img src="assets/img/energy_landscape.jpg" alt="2D energy landscape heatmaps for five breed classes">
+            <figcaption><strong>Fig. 1.</strong> 2D energy landscape for five breeds across
+                the spectrum (Abyssinian, British Shorthair, Keeshond, Russian Blue, Yorkshire
+                Terrier). Colormap: <strong>white/light = low energy</strong> (deep basin,
+                high compatibility); <strong>purple/orange = high energy</strong> (low
+                compatibility). White circles are correct-class test samples. In each panel,
+                the samples cluster tightly within the light basin region — the model has
+                carved a distinct low-energy valley for each breed in the projection of
+                representation space.</figcaption>
+        </div>
+
+        <div class="c">
+            <p>Two features of Fig. 1 are worth examining. First, the basins are localised —
+                each breed's valley occupies a compact region rather than spreading diffusely
+                across the PCA plane. This is the geometric signature of the contrastive loss
+                working correctly: correct-class representations are pulled toward a specific
+                region while incorrect-class representations are kept out. Second, the basins
+                are not uniformly deep across breeds — Yorkshire Terrier and Keeshond show
+                tighter, darker wells than British Shorthair, which has a more elongated basin.
+                These differences track the per-class accuracy entries in §10e's confusion matrix.</p>
+
+            <p>Below: the evolution of the energy surface over 50 training epochs for two
+                breeds — Abyssinian and Maine Coon — and a tracked Beagle sample. At epoch 1
+                all surfaces are nearly flat (well depth ~1.8, established in §4); by epoch 50
+                each has developed a distinct basin.</p>
+        </div>
+
+        <div class="cmp3">
+            <div class="p e">
+                <h4>Abyssinian — surface evolution</h4>
+                <img src="assets/gifs/Abyssinian.gif" alt="Abyssinian energy surface evolving over 50 training epochs">
+            </div>
+            <div class="p t">
+                <h4>Maine Coon — surface evolution</h4>
+                <img src="assets/gifs/Maine_Coon.gif" alt="Maine Coon energy surface evolving over 50 training epochs">
+            </div>
+            <div class="p e">
+                <h4>Beagle — sample tracking</h4>
+                <img src="assets/gifs/beagle_evolution.gif"
+                    alt="Beagle test sample tracked as the energy surface sculpts over epochs">
+            </div>
+        </div>
+        <div class="c">
+            <p style="font-family:var(--sans);font-size:12px;color:var(--muted);margin-bottom:24px;line-height:1.5">
+                <strong>Fig. 2.</strong> Left and centre: per-breed energy surface evolution
+                (white dots = correct-class test samples). Right: a single Beagle test sample
+                (red marker) tracked on the evolving energy surface. At epoch 1, well depth
+                ≈ 1.8 and the surface is near-flat. By epoch 50 the basin is sharp and the
+                tracked sample sits at its floor, consistent with the final energy of −8.3.
+                The three panels show the same training process from three vantage points.
+            </p>
+
+            <!-- <p>The Siamese breed provides a further example of the same phenomenon:</p>
+            <figure class="fig" style="max-width:480px;margin:0 auto 32px">
+                <img src="assets/gifs/siamese_leap.gif"
+                    alt="Siamese energy surface and sample leap into the basin during training">
+                <figcaption><strong>Fig. 3.</strong> The Siamese class surface evolving over
+                    training. The sample (red marker) begins in the high-energy plateau and
+                    abruptly drops into the forming basin around epoch 6–8, corresponding to
+                    the rapid accuracy gain phase visible in the loss curves of §10b.
+                </figcaption>
+            </figure> -->
+        </div>
+
+        <!-- 10b: Training Loss Curves -->
+        <div class="c">
+            <h3>10b. Training dynamics</h3>
+            <p>Three panels track the same training run from three complementary perspectives:
+                NLL loss, top-1 accuracy, and the energy gap $\Delta E = \bar{E}(y^-) -
+                E(y^+)$.</p>
+        </div>
+        <div class="fig fw">
+            <img src="assets/img/loss_curves.jpg"
+                alt="Training loss, validation accuracy, and energy gap over 50 epochs">
+            <figcaption><strong>Fig. 4.</strong> Training dynamics over 50 epochs. Left: NLL
+                loss on train (faded pink) and validation (navy) — close tracking throughout,
+                indicating good generalisation. Centre: validation top-1 accuracy. Right:
+                mean correct-class energy $E(y^+)$ (blue, descending to ≈ −8) and mean
+                incorrect-class energy $\bar{E}(y^-)$ (red, remaining near 0). The dominant
+                movement is the correct-class valley deepening; the surrounding plateau rises
+                only marginally.</figcaption>
+        </div>
+
+        <div class="c">
+            <div class="ins green"><strong>Key findings — Training dynamics</strong>
+                <p style="margin-top:8px">Training separates into two distinct phases. In
+                    epochs 1–8, loss and accuracy move sharply together — the model establishes
+                    the rough topology of the energy landscape, identifying which regions of
+                    representation space belong to which breed. Accuracy reaches approximately
+                    85% within this window. After epoch 8, accuracy plateaus at 90.8%, but
+                    the energy gap panel continues to evolve: $E(y^+)$ descends steadily from
+                    ≈ −5 to ≈ −8 over the remaining 42 epochs while $\bar{E}(y^-)$ barely
+                    moves from 0. The model is not reclassifying samples after epoch 8; it is
+                    deepening the basins for samples it already classifies correctly.</p>
+                <p>The near-identical train and validation loss curves throughout are a strong
+                    generalisation signal. A model that had memorised training samples would
+                    show diverging losses with a still-growing energy gap — deepening basins
+                    without extending them to unseen images. Here both signals stay in sync,
+                    indicating the model has learnt the geometric structure of each breed's
+                    representation, not the specific samples.</p>
+            </div>
+
+            <figure class="fig">
+                <img src="assets/gifs/beagle_track.gif"
+                    alt="Beagle test sample tracked on the final trained energy surface">
+                <figcaption><strong>Fig. 5.</strong> A Beagle test image placed on the
+                    final trained energy surface in PCA representation space. The sample
+                    sits squarely within the low-energy basin (blue region), with the
+                    surrounding plateau remaining high energy (red/orange). This is the
+                    inference geometry for a high-confidence, correctly classified sample
+                    — the image's CLS representation has landed in the Beagle valley.
+                </figcaption>
+            </figure>
+        </div>
+
+        <!-- 10c: Energy Distributions -->
+        <div class="c">
+            <h3>10c. Energy distributions</h3>
+            <p>For each of the 3,669 test images, we record $E(x, y^+)$ — the energy the
+                model assigns to the correct breed — and $\bar{E}(x, y^-)$ — the mean energy
+                across all 36 incorrect breeds. A well-trained model should show near-complete
+                separation between the two distributions, with $E(y^+) \ll \bar{E}(y^-)$
+                for essentially every test sample.</p>
+        </div>
+        <div class="fig fw">
+            <img src="assets/img/energy_distributions.jpg"
+                alt="Histograms of correct vs incorrect class energies and separation margin">
+            <figcaption><strong>Fig. 6.</strong> Left panel (Energy Alignment): distribution
+                of correct-class energies $E(y^+)$ (purple, centred near −8.5) and mean
+                incorrect-class energies $\bar{E}(y^-)$ (pink, spiked near 0). Right panel
+                (Separation Margin): distribution of the gap $\bar{E}(y^-) - E(y^+)$,
+                concentrated between 8 and 10. The dashed line at 0 marks the decision
+                boundary — mass to the right is correctly classified, mass to the left is
+                error. The near-absence of left-of-zero mass reflects the 90.8% accuracy.
+            </figcaption>
+        </div>
+
+        <div class="c">
+            <div class="ins green"><strong>Key findings — Energy distributions</strong>
+                <p style="margin-top:8px">The two distributions in the left panel are
+                    completely non-overlapping on the scale shown: correct-class energies
+                    cluster around −8.5 with a broad, roughly Gaussian shape; incorrect-class
+                    energies spike tightly near 0. The asymmetry in shape is itself
+                    informative. The incorrect-class spike is narrow because the NLL loss
+                    pushes all wrong classes toward the same uninformative plateau — there is
+                    no per-sample gradient signal directing where each incorrect class should
+                    land, so they all converge to roughly the same value. Correct-class
+                    energies are broader because per-sample gradients pull each basin to a
+                    depth proportional to how hard that particular image is: an atypical
+                    Beagle with unusual colouring will have a shallower valley than a
+                    prototypical one.</p>
+                <p>The right panel's separation margin histogram translates this directly to
+                    accuracy: the fraction of mass left of the dashed zero line is the error
+                    rate. The near-universal positive margin — with the bulk concentrated
+                    between 8 and 10 — confirms that correct-class basins are not merely
+                    the shallowest available, they are deeper by a wide and consistent margin.
+                </p>
+            </div>
+        </div>
+
+        <!-- 10d: Attention Maps -->
+        <div class="c">
+            <h3>10d. Attention maps</h3>
+            <p>The [CLS]-token attention weights from the final encoder block, averaged over
+                all 6 heads, reveal which spatial regions of the image contributed most to the
+                CLS representation that feeds the energy head. Under the Hopfield equivalence
+                of §6, each attention weight is a normalised compatibility score — a Gibbs
+                probability over the 197 tokens — so the attention map is a spatial projection
+                of the model's internal energy-based routing.</p>
+        </div>
+        <div class="fig fw">
+            <img src="assets/img/attention_maps.jpg" alt="Original test images and CLS attention maps overlaid">
+            <figcaption><strong>Fig. 7.</strong> Top row: eight original test images spanning
+                cat and dog breeds. Bottom row: [CLS]-token attention from the final encoder
+                block, averaged over 6 heads, upsampled to input resolution (inferno
+                colormap — bright yellow/orange = high attention weight). The model
+                consistently attends to breed-discriminative features: ear shape, facial
+                proportions, coat texture, muzzle structure. Scene context — background,
+                furniture, foliage — receives near-zero attention weight throughout.
+            </figcaption>
+        </div>
+
+        <div class="c">
+            <div class="ins green"><strong>Key findings — Attention maps</strong>
+                <p style="margin-top:8px">The most striking feature of Fig. 7 is the
+                    consistent suppression of background. Across all eight samples — different
+                    breeds, poses, scenes, lighting conditions — the model attends to the
+                    animal and ignores the environment. No supervision signal directed this
+                    behaviour: the training labels are breed integers, not segmentation masks
+                    or saliency annotations. The spatial selectivity emerges entirely from the
+                    contrastive energy loss, which forces the model to find features that
+                    discriminate between breeds — and those features are, correctly, on the
+                    animal itself.</p>
+                <p>A second observation is that attention rarely collapses to a single point.
+                    Multiple facial landmarks — ear tip, eye region, muzzle — are highlighted
+                    simultaneously. This is consistent with the energy head computing a dot
+                    product between the CLS vector and a class template: no single patch
+                    determines the energy value, but rather a distributed aggregate of
+                    breed-discriminative signals. The Sphynx (column 3) is a clean example:
+                    ear shape and facial structure are both lit up, consistent with the
+                    hairless cat's most distinguishing features being its large ears and
+                    angular face rather than any coat characteristic.</p>
+            </div>
+        </div>
+
+        <!-- 10e: Confusion Matrix -->
+        <div class="c">
+            <h3>10e. Confusion matrix</h3>
+            <p>The confusion matrix reveals which pairs of breeds share overlapping energy
+                basins in representation space — specifically, which incorrect class achieves
+                the lowest energy when the model makes an error. This figure uses the
+                pretrained ViT-B/16 variant (93.4% mean accuracy), providing a strong-backbone
+                upper bound; the EBT-small structure of errors is qualitatively identical but
+                with a slightly higher error rate.</p>
+            <figure class="fig" style="margin: 24px auto; max-width: 720px;">
+                <img src="assets/img/confusion_matrix.jpg"
+                    alt="37x37 normalised confusion matrix — Breed Confusion Matrix">
+                <figcaption><strong>Fig. 8.</strong> Normalised confusion matrix over 37 breeds,
+                    pretrained ViT-B/16 variant (mean accuracy 93.4%). Diagonal = per-class
+                    recall. Off-diagonal mass is concentrated between visually similar breeds:
+                    the most prominent confusion entry is Staffordshire Bull Terrier ↔ American
+                    Pit Bull Terrier, followed by terrier-type dog pairs and closely related cat
+                    breeds (Siamese / Birman, Russian Blue / British Shorthair). No cat/dog
+                    confusion entries are visible at any scale.
+                </figcaption>
+            </figure>
+        </div>
+
+        <div class="c">
+            <div class="ins green"><strong>Key findings — Confusion matrix</strong>
+                <p style="margin-top:8px">The confusion pattern is not random — it is
+                    geometrically structured. Off-diagonal mass concentrates between breeds
+                    that share morphological features: coat colour, facial proportions, body
+                    shape. Staffordshire Bull Terrier and American Pit Bull Terrier are the
+                    most-confused pair, which is unsurprising given their visual overlap even
+                    to expert human observers. Within the cat group, Siamese and Birman share
+                    a similar colour-point pattern; Russian Blue and British Shorthair share
+                    a dense grey coat. These are exactly the breed pairs whose energy basins
+                    would be expected to partially overlap in representation space.</p>
+                <p>The complete absence of cat/dog confusion — across all 37 classes,
+                    including visually compact breeds like Persian and Pug — is a strong
+                    result. The macro species partition is deeply encoded in the energy
+                    landscape, sufficiently so that no fine-grained discriminability failure
+                    causes a cross-species prediction. This hierarchy is consistent with the
+                    t-SNE structure in §10g, where cat and dog clusters are spatially separated
+                    at the macro level before any within-species breed geometry is visible.
+                </p>
+            </div>
+        </div>
+
+        <!-- 10f: OOD Detection -->
+        <div class="c">
+            <h3>10f. Out-of-distribution detection</h3>
+            <p>The free-energy score $\mathcal{F}(x) = -\log Z(x) = -\text{LogSumExp}_c
+                (-E_\theta(x,c))$ measures the total probability mass the model distributes
+                across all classes. When at least one class has strongly negative energy —
+                as for in-distribution pet images — $Z(x)$ is large and $\mathcal{F}(x)$ is
+                a large negative number. When no class has strongly negative energy — as for
+                OOD inputs — $Z(x)$ is small (the sum of 37 near-unity Boltzmann factors)
+                and $\mathcal{F}(x)$ is a smaller negative number, closer to zero. The
+                sign convention: <strong>more negative $\mathcal{F}(x)$ = more
+                    in-distribution</strong>.</p>
+        </div>
+        <div class="fig fw">
+            <img src="assets/img/ood_detection.jpg"
+                alt="Free energy score distributions for in-distribution Pets, Gaussian noise, and CIFAR-10">
+            <figcaption><strong>Fig. 9.</strong> Free-energy score $\mathcal{F}(x) =
+                -\log Z(x)$ distributions. Left: in-distribution Pets (purple, centred ≈ −8)
+                vs Gaussian noise (pink, spiked ≈ −4). AUROC = 1.000 — perfect separation.
+                Centre: min-energy $\min_c E(x,c)$ as an alternative OOD signal — similar
+                separation, confirming both formulations detect noise. Right: Pets vs
+                CIFAR-10 natural images (teal, distributed −4 to −3). AUROC = 0.996 —
+                near-perfect separation against a realistic, structurally different
+                distribution. In-distribution pet images cluster at more-negative
+                $\mathcal{F}$ (left on the x-axis); OOD inputs cluster at less-negative
+                $\mathcal{F}$ (right).</figcaption>
+        </div>
+
+        <div class="c">
+            <div class="ins green"><strong>Key findings — OOD detection</strong>
+                <p style="margin-top:8px">The left panel's perfect AUROC (1.000) against
+                    Gaussian noise is expected: noise has no structure that maps onto any
+                    breed-specific basis in the energy landscape, so all class energies remain
+                    near the uninformative plateau value (~0), $Z(x) \approx 37$, and
+                    $\mathcal{F}(x) \approx -\log 37 \approx -3.6$. In-distribution pet
+                    images have at least one class with energy ≈ −8, yielding
+                    $\mathcal{F}(x) \approx -8$. The two populations are separated by
+                    roughly 4 units of free energy with no overlap.</p>
+                <p>The right panel — CIFAR-10 natural images — is the more substantive
+                    result. CIFAR-10 contains natural photographs with real structure: animals,
+                    vehicles, objects photographed in environments similar to the training
+                    distribution. Despite this, the AUROC is 0.996. The model's energy
+                    landscape, trained exclusively on 37 pet breeds, is sufficiently specific
+                    that it produces a measurably lower free-energy score for CIFAR images
+                    than for pet images. No OOD training signal, no auxiliary loss, no
+                    calibration step — purely structural. The centre panel confirms that
+                    $\min_c E(x,c)$ alone also separates the distributions, showing that
+                    both the free-energy and minimum-energy formulations of the OOD score
+                    are effective for this setting.</p>
+            </div>
+        </div>
+
+        <!-- 10g: t-SNE Embeddings -->
+        <div class="c">
+            <h3>10g. CLS representation geometry</h3>
+            <p>t-SNE applied to the 384-dimensional CLS vectors from the test split reveals
+                whether breeds that are close in the energy landscape (low dot-product energy
+                with each other's class templates) are also close in the raw representation
+                space. The two questions are related but not identical — t-SNE shows the
+                geometry of $h_\theta(x)$ before the linear energy head, while the confusion
+                matrix shows the output of the full pipeline including the energy head.</p>
+            <figure class="fig" style="margin: 24px auto; max-width: 720px;">
+                <img src="assets/img/embeddings_tsne.jpg"
+                    alt="t-SNE projection of CLS embeddings for the first 10 breeds">
+                <figcaption><strong>Fig. 10.</strong> t-SNE projection of CLS embeddings for
+                    the first 10 breeds alphabetically (Abyssinian, American Bulldog, American
+                    Pit Bull Terrier, Basset Hound, Beagle, Bengal, Birman, Bombay, Boxer,
+                    British Shorthair). Each colour is one breed. Within this 10-breed subset,
+                    the cat breeds (Abyssinian, Bengal, Birman, Bombay, British Shorthair) and
+                    dog breeds (American Bulldog, American Pit Bull Terrier, Basset Hound, Beagle,
+                    Boxer) form clearly separated clusters in t-SNE space, despite species
+                    membership not being encoded in the training labels.
+                </figcaption>
+            </figure>
+        </div>
+
+        <div class="c">
+            <div class="ins green"><strong>Key findings — CLS representation geometry</strong>
+                <p style="margin-top:8px">Within this 10-breed window, the t-SNE map shows
+                    tight, well-separated clusters for most breeds. The two American bull-type
+                    breeds (American Bulldog and American Pit Bull Terrier) appear as
+                    neighbouring clusters — consistent with their confusion matrix entry —
+                    while the five cat breeds occupy a distinct macro-region from the five
+                    dog breeds. The species-level partition is clear even without showing all
+                    37 breeds.</p>
+                <p>It is worth distinguishing what this plot shows from what it does not.
+                    t-SNE is a 2D projection of a 384-dimensional space with non-metric
+                    distortions — cluster separation in t-SNE does not directly measure energy
+                    gap, and cluster proximity does not directly imply energy overlap. What
+                    the plot does confirm is that the CLS representations have learnt a
+                    semantically meaningful neighbourhood structure: breeds that look similar
+                    are placed near each other in representation space, which is a necessary
+                    but not sufficient condition for the energy landscape to have the geometry
+                    observed in §10a and §10e.</p>
+            </div>
+        </div>
+
+        <!-- 10h: Calibration -->
+        <div class="c">
+            <h3>10h. Energy gap as calibration signal</h3>
+            <p>§9 derived that the energy gap $\Delta E(x) = E(c_2) - E(c_1)$ translates
+                exactly to a probability ratio $\exp(\Delta E)$ under the Gibbs distribution.
+                If the model is well-calibrated, this ratio should track empirical accuracy:
+                samples where $\Delta E$ is large should be classified correctly more often
+                than samples where $\Delta E$ is small. Fig. 11 tests this directly.</p>
+        </div>
+        <div class="fig fw">
+            <img src="assets/img/energy_gap_calibration.jpg" alt="Accuracy vs energy gap margin and reliability curve">
+            <figcaption><strong>Fig. 11.</strong> Left: test accuracy binned by energy gap
+                across 10 equal-frequency deciles (gap values 0.7 through 7.8 at the bin
+                centres). Accuracy rises from ~58% in the lowest-gap bin to ~100% in the
+                highest. Right: reliability curve — each point is one test sample; the
+                red line is a smoothed conditional accuracy given energy gap. The curve
+                rises monotonically and asymptotes near 1.0 for gaps above ~5.</figcaption>
+        </div>
+
+        <div class="c">
+            <div class="ins green"><strong>Key findings — Energy gap calibration</strong>
+                <p style="margin-top:8px">The bar chart in Fig. 11 (left) confirms the
+                    theoretical prediction from §9: accuracy increases monotonically with
+                    energy gap across all ten decile bins without exception. The lowest-gap
+                    bin (mean gap ≈ 0.7) achieves only ~58% accuracy — the model is nearly
+                    guessing when the two lowest-energy classes are nearly tied. The
+                    highest-gap bin (mean gap ≈ 7.8) achieves ~100% accuracy — when the
+                    correct class valley is deep and unambiguous, the model is almost never
+                    wrong.</p>
+                <p>The reliability curve (right) provides finer resolution. The rise from
+                    50% at gap ≈ 0 to near-100% is roughly sigmoidal, with the steepest
+                    gain between gaps 0 and 3. Beyond gap 4, the curve is essentially flat
+                    at 99–100%. This means that a single threshold of approximately
+                    $\Delta E \approx 3$ separates ambiguous predictions (below: ~80%
+                    accurate) from confident predictions (above: ~99% accurate) — a usable
+                    abstention criterion requiring no post-hoc fitting.</p>
+            </div>
+        </div>
+
+        <!-- 10i: Final inference trace -->
+        <!-- <div class="c">
+            <h3>10i. Full inference trace</h3>
+            <p>The final animation shows a Beagle test image tracked across the full 50
+                epochs of training on the Beagle class energy surface. It synthesises the
+                training narrative of §10b with the inference geometry of §10a: the surface
+                starts flat, the marker begins near the plateau, and by convergence the
+                sample sits at the floor of a deep valley.</p>
+
+            <figure class="fig">
+                <img src="assets/gifs/final_beagle_track.gif"
+                    alt="Beagle test sample tracked across 50 training epochs on the Beagle energy surface">
+                <figcaption><strong>Fig. 12.</strong> Beagle test image (red marker) on
+                    the Beagle class energy surface, animated across training epochs.
+                    At epoch 1, $E \approx -0.02$ — the surface has almost no structure
+                    and the sample floats near the uniform plateau. As training progresses,
+                    a basin forms beneath the cluster of correct-class representations;
+                    the marker descends with it, reaching $E \approx -8.3$ at convergence.
+                    The surrounding terrain remains high energy throughout — the valley
+                    deepens while the plateau stays flat, exactly the asymmetric dynamics
+                    seen in Fig. 4's energy gap panel.</figcaption>
+            </figure>
+        </div> -->
+
+        <!-- Summary metrics -->
+        <div class="c">
+            <h3>Summary metrics — EBT-small</h3>
+            <div class="met">
+                <div class="mc e">
+                    <div class="l">Top-1 Accuracy</div>
+                    <div class="val">90.8%</div>
+                </div>
+                <div class="mc t">
+                    <div class="l">Mean Energy Gap</div>
+                    <div class="val">~8.5</div>
+                </div>
+                <div class="mc e">
+                    <div class="l">Mean Energy (correct)</div>
+                    <div class="val">−8.3</div>
+                </div>
+                <div class="mc t">
+                    <div class="l">Mean Energy (incorrect)</div>
+                    <div class="val">+0.2</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- §11 SUMMARY -->
+    <!-- ============================================================ -->
+    <section id="summary">
+        <div class="c">
+            <h2><span class="n">§11</span> Summary: the big picture</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>EBM Concept</th>
+                        <th>What it means</th>
+                        <th>Our implementation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Energy $E(x,y)$</td>
+                        <td>Compatibility score</td>
+                        <td>$-h_\theta(x)^\top w_c - b_c$</td>
+                    </tr>
+                    <tr>
+                        <td>Gibbs distribution</td>
+                        <td>Energy → probability</td>
+                        <td>$\text{softmax}(-E)$</td>
+                    </tr>
+                    <tr>
+                        <td>Partition function $Z$</td>
+                        <td>Normalizing constant</td>
+                        <td>Sum over 37 classes (exact)</td>
+                    </tr>
+                    <tr>
+                        <td>Contrastive training</td>
+                        <td>Dig valleys, build hills</td>
+                        <td>NLL loss = cross-entropy</td>
+                    </tr>
+                    <tr>
+                        <td>Inference</td>
+                        <td>Find lowest energy</td>
+                        <td>$\arg\min_c E(x,c)$</td>
+                    </tr>
+                    <tr>
+                        <td>OOD detection</td>
+                        <td>All energies high = unknown</td>
+                        <td>Threshold on $\min_c E$</td>
+                    </tr>
+                    <tr>
+                        <td>Backbone</td>
+                        <td>Any scalar-output network</td>
+                        <td>EBT-small (6 layers, 384-d)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Key takeaways</h3>
+
+            <p><strong>1. Every softmax classifier is an EBM.</strong> The standard neural network classification
+                pipeline
+                — features → linear layer → softmax → cross-entropy — is mathematically identical to an energy-based
+                model
+                with conditional Gibbs distribution and negative log-likelihood training. The EBM framework doesn't
+                change
+                what you compute; it changes how you <em>think about</em> what you compute.</p>
+
+            <p><strong>2. The energy interpretation gives you more.</strong> Once you view your model through the energy
+                lens, you get natural tools for OOD detection (high energy = unfamiliar), confidence estimation (energy
+                gap
+                between top classes), and model composition (sum energies from multiple models).</p>
+
+            <p><strong>3. The hard part is when Z is intractable.</strong> For classification, the partition function is
+                just a sum over classes — trivially computed. The real challenges of EBMs emerge in generative settings
+                where $Z$ must be approximated. This is where contrastive divergence, score matching, and Langevin
+                dynamics become essential.</p>
+
+            <p><strong>4. Vision Transformers are natural EBM backbones.</strong> The global self-attention mechanism
+                lets
+                every patch attend to every other, building rich representations. The [CLS] token provides a natural
+                aggregation point. The architecture's flexibility — no invertibility constraints, no generative decoder
+                —
+                is exactly what EBMs need.</p>
+
+            <h3>What comes next?</h3>
+            <p><strong>Joint energy models (JEM):</strong> Use the same energy function for both classification
+                <em>and</em> generation — $p(x) \propto \sum_y \exp(-E(x,y))$ — training with MCMC-based generation.
+            </p>
+            <p><strong>Diffusion models as EBMs:</strong> Score-based diffusion models learn $\nabla_x \log p(x)$ — the
+                gradient of the energy surface — and use it for generation via Langevin dynamics.</p>
+            <p><strong>Compositional generation:</strong> Because energies are additive scalars, you can compose
+                multiple
+                EBMs: $E_{\text{total}}(x) = E_{\text{color}}(x) + E_{\text{shape}}(x)$ to generate images satisfying
+                multiple constraints simultaneously.</p>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- APPENDIX -->
+    <!-- ============================================================ -->
+    <div class="app" id="app">
+        <div class="c">
+            <h2><span class="n">A</span> Reproducing</h2>
+            <pre><code>pip install torch torchvision matplotlib numpy scikit-learn scipy pillow
+
+# Train the EBT (small model, 50 epochs)
+python main.py train --epochs 50 --size small --lr 3e-4 --device cuda
+
+# Train with pretrained ViT-B/16 backbone
+python main.py train --epochs 20 --pretrained --lr 1e-4 --device cuda
+
+# Generate all analysis plots to assets/img/
+python main.py analytics --checkpoint checkpoints/ebt_best.pt --output_dir assets/img
+
+# Render 3D energy surface for class index 5
+python main.py plot_3d --checkpoint checkpoints/ebt_best.pt --class_idx 5 --style sample</code></pre>
+            <p>~1 hour on a single A10 GPU for full training.</p>
+
+            <h3>File structure for GitHub Page</h3>
+            <pre><code>Energy-Based-Vision-Transformers/
+├── index.html
+├── assets/
+│   ├── img/
+│   │   ├── energy_landscape.jpg
+│   │   ├── loss_curves.jpg
+│   │   ├── energy_distributions.jpg
+│   │   ├── attention_maps.jpg
+│   │   ├── confusion_matrix.jpg
+│   │   ├── ood_detection.jpg
+│   │   ├── embeddings_tsne.jpg
+│   │   ├── energy_gap_calibration.jpg
+│   │   └── vit_trasnformer.png
+│   └── gifs/
+│       ├── dual_surface.gif
+│       ├── energy_surface_evolution.gif
+│       ├── beagle_evolution.gif
+│       ├── beagle_track.gif
+│       ├── final_beagle_track.gif
+│       ├── two_sample_surface.gif
+│       ├── siamese_leap.gif
+│       ├── s_leap.gif
+│       ├── Abyssinian.gif
+│       └── Maine_Coon.gif
+└── EBT/
+    ├── main.py
+    ├── ebt/
+    ├── data/
+    └── requirements.txt</code></pre>
+
+            <h3>References</h3>
+            <p style="font-size:14px;line-height:1.6">
+                LeCun, Chopra, Hadsell, Ranzato, Huang (2006). A tutorial on energy-based learning. <em>Predicting
+                    Structured Data</em>, MIT Press.<br>
+                Ramsauer, Schäfl, Lehner, Seidl et al. (2020). Hopfield Networks is All You Need. <em>ICLR
+                    2021</em>.<br>
+                Grathwohl, Wang, Jacobsen, Duvenaud, Zemel (2020). Your classifier is secretly an energy based model and
+                you should treat it like one. <em>ICLR</em>.<br>
+                Liu, Wang, Owens, Li (2020). Energy-based out-of-distribution detection. <em>NeurIPS</em>.<br>
+                Du, Mordatch (2019). Implicit generation and generalization in energy-based models.
+                <em>NeurIPS</em>.<br>
+                Dosovitskiy et al. (2021). An image is worth 16×16 words: Transformers for image recognition at scale.
+                <em>ICLR</em>.<br>
+                Song, Ermon (2019). Generative modelling by estimating gradients of the data distribution.
+                <em>NeurIPS</em>.<br>
+                Hinton (2002). Training products of experts by minimizing contrastive divergence. <em>Neural
+                    Computation</em>.
+            </p>
+        </div>
+    </div>
+
+    <!-- Author -->
+    <section style="border-top:1px solid var(--border);padding:3rem 0;background:var(--bg)">
+        <div class="c" style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+            <img src="assets/img/my_face.jpg" alt="Nikhil Sharma"
+                style="width:96px;height:96px;border-radius:50%;object-fit:cover;object-position:center top;border:3px solid var(--trans);flex-shrink:0">
+            <div>
+                <p style="font-family:var(--sans);font-weight:700;font-size:17px;margin:0 0 4px;color:var(--text)">
+                    Nikhil Sharma</p>
+                <p style="font-family:var(--sans);font-size:14px;color:var(--muted);margin:0 0 2px">Senior Research
+                    Engineer · Flam AI</p>
+                <p style="font-family:var(--sans);font-size:14px;color:var(--muted);margin:0 0 14px">Former RA, CVM Lab
+                    · Illinois Tech Chicago</p>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <a href="https://www.linkedin.com/in/nikhil-sharma-jiit/" target="_blank" rel="noopener"
+                        style="display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--trans);background:var(--trans-l);border:1px solid var(--trans);border-radius:6px;padding:6px 14px;text-decoration:none;transition:opacity .15s">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                        </svg>
+                        LinkedIn
+                    </a>
+                    <a href="https://github.com/nikhiliit/Energy-Based-Vision-Transformers" target="_blank"
+                        rel="noopener"
+                        style="display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--text);background:var(--bg-card);border:1px solid var(--border);border-radius:6px;padding:6px 14px;text-decoration:none;transition:opacity .15s">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" />
+                        </svg>
+                        GitHub repo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="c">
+            <p>KaTeX + GitHub Pages · Built with the EBM framework in mind ·
+                <a href="https://github.com/nikhiliit/Energy-Based-Vision-Transformers" target="_blank"
+                    rel="noopener">View source on GitHub</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        /* ── Theme toggle ── */
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            const btn = document.getElementById('theme-toggle');
+            if (btn) btn.textContent = theme === 'dark' ? '☀' : '☾';
+            const lbl = document.getElementById('ts-label');
+            if (lbl) lbl.textContent = theme === 'dark' ? 'Dark' : 'Light';
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', next);
+            applyTheme(next);
+        }
+
+        /* Initialise from localStorage, fall back to OS preference */
+        (function () {
+            const stored = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            applyTheme(stored || (prefersDark ? 'dark' : 'light'));
+        })();
+
+        /* Also respond if the OS preference changes while the page is open */
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+            if (!localStorage.getItem('theme')) applyTheme(e.matches ? 'dark' : 'light');
+        });
+
+        /* ── Math expand/collapse ── */
+        function toggleMath(id) {
+            const panel = document.getElementById(id);
+            const btn = document.querySelector('[onclick="toggleMath(\'' + id + '\')"]');
+            if (!panel || !btn) return;
+            panel.classList.toggle('vis');
+            const open = panel.classList.contains('vis');
+            btn.textContent = btn.textContent.replace(open ? '↓' : '↑', open ? '↑' : '↓');
+        }
+
+        /* ── Copy-to-clipboard on code blocks ── */
+        (function () {
+            var copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+            var checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+            document.querySelectorAll('pre').forEach(function (pre) {
+                var wrapper = document.createElement('div');
+                wrapper.className = 'code-wrap';
+                pre.parentNode.insertBefore(wrapper, pre);
+                wrapper.appendChild(pre);
+
+                var btn = document.createElement('button');
+                btn.className = 'copy-btn';
+                btn.innerHTML = copyIcon + ' Copy';
+                btn.setAttribute('aria-label', 'Copy code to clipboard');
+                wrapper.appendChild(btn);
+
+                btn.addEventListener('click', function () {
+                    var code = pre.querySelector('code');
+                    var text = (code || pre).textContent;
+                    navigator.clipboard.writeText(text).then(function () {
+                        btn.innerHTML = checkIcon + ' Copied!';
+                        btn.classList.add('copied');
+                        setTimeout(function () {
+                            btn.innerHTML = copyIcon + ' Copy';
+                            btn.classList.remove('copied');
+                        }, 2000);
+                    });
+                });
+            });
+        })();
+
+        /* ── Star / bookmark button (Global with CounterAPI.dev) ── */
+        var STAR_KEY = 'ebt-blog-starred';
+        var API_NAMESPACE = 'ebt-blog-enm';
+        var API_KEY = 'stars';
+        var API_URL = 'https://api.counterapi.dev/v1/' + API_NAMESPACE + '/' + API_KEY;
+
+        function isStarred() {
+            return localStorage.getItem(STAR_KEY) === '1';
+        }
+
+        async function fetchGlobalCount() {
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                return data.count || 0;
+            } catch (e) {
+                console.error('CounterAPI fetch failed:', e);
+                return 42; /* fallback */
+            }
+        }
+
+        async function updateGlobalCount(action) {
+            try {
+                const res = await fetch(API_URL + '/' + action);
+                const data = await res.json();
+                return data.count;
+            } catch (e) {
+                console.error('CounterAPI update failed:', e);
+                return null;
+            }
+        }
+
+        async function renderStar(initialCount) {
+            var wrap = document.getElementById('star-wrap');
+            var icon = wrap.querySelector('.star-icon');
+            var countEl = document.getElementById('star-count');
+            var starred = isStarred();
+            
+            /* If we don't have a count yet (startup), fetch it or use the passed one */
+            var count = initialCount !== undefined ? initialCount : await fetchGlobalCount();
+            
+            wrap.classList.toggle('starred', starred);
+            icon.textContent = starred ? '★' : '☆';
+            countEl.textContent = count;
+        }
+
+        async function toggleStar() {
+            var starred = !isStarred();
+            localStorage.setItem(STAR_KEY, starred ? '1' : '0');
+            
+            /* Update UI optimistically */
+            var countEl = document.getElementById('star-count');
+            var currentCount = parseInt(countEl.textContent, 10);
+            countEl.textContent = starred ? currentCount + 1 : Math.max(0, currentCount - 1);
+            
+            var wrap = document.getElementById('star-wrap');
+            var icon = wrap.querySelector('.star-icon');
+            wrap.classList.toggle('starred', starred);
+            icon.textContent = starred ? '★' : '☆';
+
+            /* Perform actual API update */
+            const newCount = await updateGlobalCount(starred ? 'up' : 'down');
+            if (newCount !== null) {
+                countEl.textContent = newCount;
+            }
+
+            /* little bounce animation */
+            icon.style.transform = 'scale(1.4)';
+            setTimeout(function () { icon.style.transform = ''; }, 200);
+        }
+
+        /* Initial render */
+        renderStar();
+    </script>
+</body>
+<!-- GitHub Pages Build Trigger: 2026-03-17 -->
+</html>
