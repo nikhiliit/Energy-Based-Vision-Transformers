@@ -3570,71 +3570,50 @@ python main.py plot_3d --checkpoint checkpoints/ebt_best.pt --class_idx 5 --styl
             });
         })();
 
-        /* ── Star / bookmark button (Global with CounterAPI.dev) ── */
+        /* ── Star / bookmark button (Real GitHub Stars) ── */
         var STAR_KEY = 'ebt-blog-starred';
-        var API_NAMESPACE = 'ebt-blog-enm';
-        var API_KEY = 'stars';
-        var API_URL = 'https://api.counterapi.dev/v1/' + API_NAMESPACE + '/' + API_KEY;
+        var REPO_PATH = 'nikhiliit/Energy-Based-Vision-Transformers';
+        var API_URL = 'https://api.github.com/repos/' + REPO_PATH;
 
         function isStarred() {
             return localStorage.getItem(STAR_KEY) === '1';
         }
 
-        async function fetchGlobalCount() {
+        async function fetchGitHubStars() {
             try {
                 const res = await fetch(API_URL);
                 const data = await res.json();
-                return data.count || 0;
+                return data.stargazers_count !== undefined ? data.stargazers_count : 0;
             } catch (e) {
-                console.error('CounterAPI fetch failed:', e);
-                return 42; /* fallback */
+                console.error('GitHub API fetch failed:', e);
+                return 0;
             }
         }
 
-        async function updateGlobalCount(action) {
-            try {
-                const res = await fetch(API_URL + '/' + action);
-                const data = await res.json();
-                return data.count;
-            } catch (e) {
-                console.error('CounterAPI update failed:', e);
-                return null;
-            }
-        }
-
-        async function renderStar(initialCount) {
+        async function renderStar() {
             var wrap = document.getElementById('star-wrap');
             var icon = wrap.querySelector('.star-icon');
             var countEl = document.getElementById('star-count');
             var starred = isStarred();
             
-            /* If we don't have a count yet (startup), fetch it or use the passed one */
-            var count = initialCount !== undefined ? initialCount : await fetchGlobalCount();
+            var count = await fetchGitHubStars();
             
             wrap.classList.toggle('starred', starred);
             icon.textContent = starred ? '★' : '☆';
             countEl.textContent = count;
         }
 
-        async function toggleStar() {
-            var starred = !isStarred();
-            localStorage.setItem(STAR_KEY, starred ? '1' : '0');
+        function toggleStar() {
+            /* Open GitHub repository to allow actual starring */
+            window.open('https://github.com/' + REPO_PATH, '_blank');
             
-            /* Update UI optimistically */
-            var countEl = document.getElementById('star-count');
-            var currentCount = parseInt(countEl.textContent, 10);
-            countEl.textContent = starred ? currentCount + 1 : Math.max(0, currentCount - 1);
+            /* Record intent locally for visual persistence */
+            localStorage.setItem(STAR_KEY, '1');
             
             var wrap = document.getElementById('star-wrap');
             var icon = wrap.querySelector('.star-icon');
-            wrap.classList.toggle('starred', starred);
-            icon.textContent = starred ? '★' : '☆';
-
-            /* Perform actual API update */
-            const newCount = await updateGlobalCount(starred ? 'up' : 'down');
-            if (newCount !== null) {
-                countEl.textContent = newCount;
-            }
+            wrap.classList.add('starred');
+            icon.textContent = '★';
 
             /* little bounce animation */
             icon.style.transform = 'scale(1.4)';
